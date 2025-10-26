@@ -27,7 +27,7 @@ const BACKEND_DIR = path.join(ROOT, "../backend");
 const BACKEND_EXE = isDev
   ? process.platform === "win32"
     ? path.join(BACKEND_DIR, "venv", "Scripts", "python.exe")
-    : path.join(BACKEND_DIR, "venv", "bin", "python3")
+    : path.join(BACKEND_DIR, "venv", "bin", "python3.10")
   : process.platform === "win32"
   ? path.join(process.resourcesPath, "backend", "backend_main.exe")
   : path.join(process.resourcesPath, "backend", "backend_main");

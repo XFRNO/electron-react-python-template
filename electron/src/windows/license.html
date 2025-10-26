@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>License Verification</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 40px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: rgb(0, 0, 0);
+        color: rgb(231, 233, 234);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        box-sizing: border-box;
+      }
+      .container {
+        background: rgb(23, 24, 28);
+        padding: 30px;
+        border-radius: 12px;
+        text-align: center;
+        max-width: 400px;
+        width: 100%;
+        box-shadow: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0),
+          0px 4px 6px -1px hsl(202.8169 89.1213% 53.1373% / 0);
+      }
+      h1 {
+        margin-bottom: 20px;
+        color: rgb(28, 156, 240);
+      }
+      input {
+        width: 100%;
+        padding: 12px;
+        margin: 10px 0;
+        border: 1px solid rgb(22, 30, 37);
+        border-radius: 6px;
+        background: rgb(0, 0, 0);
+        color: rgb(231, 233, 234);
+        font-size: 14px;
+        box-sizing: border-box;
+        transition: border 0.3s;
+      }
+      textarea:focus,
+      input:focus {
+        outline: none;
+        border: 1px solid white;
+      }
+      button {
+        width: 100%;
+        padding: 12px;
+        margin: 10px 0;
+        border: none;
+        border-radius: 6px;
+        background: rgb(28, 156, 240);
+        color: rgb(255, 255, 255);
+        font-size: 14px;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+      button:hover {
+        background: rgb(6, 22, 34);
+        color: rgb(28, 156, 240);
+      }
+      button:disabled {
+        background: rgb(24, 24, 24);
+        color: rgb(114, 118, 122);
+        cursor: not-allowed;
+      }
+      .error {
+        color: rgb(244, 33, 46);
+        margin-top: 10px;
+        font-size: 12px;
+      }
+      .success {
+        color: rgb(0, 184, 122);
+        margin-top: 10px;
+        font-size: 12px;
+      }
+      .details {
+        color: rgb(114, 118, 122);
+        font-size: 11px;
+        margin-top: 5px;
+        text-align: left;
+        background: rgb(24, 24, 24);
+        padding: 8px;
+        border-radius: 4px;
+        white-space: pre-wrap;
+      }
+      .error-display {
+        background: rgba(244, 33, 46, 0.1);
+        border: 1px solid rgb(244, 33, 46);
+        border-radius: 6px;
+        padding: 15px;
+        margin-bottom: 20px;
+        text-align: center;
+      }
+      .error-display p {
+        color: rgb(244, 33, 46);
+        margin: 0;
+        font-size: 14px;
+      }
+      .error-message {
+        color: rgb(244, 33, 46);
+        margin: 0 0 15px 0;
+        font-size: 14px;
+        font-weight: 500;
+      }
+      .support-info {
+        font-size: 12px;
+        opacity: 0.7;
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .support-email {
+        color: rgb(28, 156, 240);
+        text-decoration: none;
+      }
+      .support-email:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div id="errorContainer"></div>
+      <h1>Video Downloader</h1>
+      <p>Please enter your license key to continue:</p>
+      <input type="text" id="licenseKey" placeholder="Enter your license key" />
+      <button id="verifyBtn" onclick="verifyLicense()">Verify License</button>
+      <p style="font-size: 12px; opacity: 0.7; margin-top: 20px">
+        Don't have a license?
+        <a href="#" onclick="openPurchase()" style="color: rgb(28, 156, 240)"
+          >Purchase here</a
+        >
+      </p>
+      <div class="support-info">
+        Need help? Contact support at
+        <a href="mailto:contact@xfrno.com" class="support-email"
+          >contact@xfrno.com</a
+        >
+      </div>
+    </div>
+
+    <script>
+      console.log("License HTML loaded");
+
+      // Check if electronAPI is available
+      if (typeof window.electronAPI === "undefined") {
+        console.error("electronAPI is not available!");
+        displayLicenseError(
+          "Error",
+          "Application not loaded properly. Please restart the app."
+        );
+      } else {
+        console.log("electronAPI is available");
+
+        // Listen for error messages from the main process
+        window.electronAPI.onLicenseError((errorTitle, errorMessage) => {
+          console.log("Received license error:", errorTitle, errorMessage);
+          displayLicenseError(errorTitle, errorMessage);
+        });
+      }
+
+      // Function to display license errors
+      function displayLicenseError(title, message) {
+        const errorContainer = document.getElementById("errorContainer");
+        // Clear any existing content
+        errorContainer.innerHTML = "";
+        // Show only the error message at the top
+        const errorDiv = document.createElement("div");
+        errorDiv.className = "error-message";
+        errorDiv.textContent = message;
+        errorContainer.appendChild(errorDiv);
+
+        // Ensure all elements remain visible when showing error
+        document.querySelector('input[type="text"]').style.display = "block";
+        document.querySelector("#verifyBtn").style.display = "block";
+        document.querySelector("p").style.display = "block";
+      }
+
+      async function verifyLicense() {
+        console.log("verifyLicense function called");
+        const licenseKey = document.getElementById("licenseKey").value.trim();
+        const verifyBtn = document.getElementById("verifyBtn");
+
+        if (!licenseKey) {
+          // Show error at the top
+          displayLicenseError("Error", "Please enter a license key");
+          return;
+        }
+
+        verifyBtn.disabled = true;
+        verifyBtn.textContent = "Verifying...";
+
+        try {
+          console.log("Calling electronAPI.verifyLicense");
+          const result = await window.electronAPI.verifyLicense(licenseKey);
+          console.log("License verification result:", result);
+          if (result.success) {
+            // Show success message at the top
+            displayLicenseError(
+              "Success",
+              "License verified! Starting application..."
+            );
+            setTimeout(() => {
+              // License window will be closed by main process
+            }, 1000);
+          } else {
+            let errorMessage = "License verification failed.";
+            if (result.error) {
+              errorMessage = result.error;
+            }
+
+            // Show error at the top
+            displayLicenseError("License Error", errorMessage);
+          }
+        } catch (error) {
+          console.error("License verification error:", error);
+          // Show error at the top
+          displayLicenseError(
+            "Error",
+            "Verification failed. Please check your internet connection."
+          );
+        }
+
+        verifyBtn.disabled = false;
+        verifyBtn.textContent = "Verify License";
+      }
+
+      function openPurchase() {
+        console.log("openPurchase function called");
+        // Check if electronAPI and openExternal are available
+        if (
+          typeof window.electronAPI !== "undefined" &&
+          typeof window.electronAPI.openExternal === "function"
+        ) {
+          // This would open the purchase URL
+          window.electronAPI.openExternal("https://xfrno.gumroad.com/l/uodmbn");
+        } else {
+          console.error("electronAPI.openExternal is not available");
+          // Fallback: try to open in a new tab/window
+          window.open("https://xfrno.gumroad.com/l/uodmbn", "_blank");
+        }
+      }
+
+      // Allow Enter key to submit
+      document.addEventListener("keypress", function (e) {
+        if (e.key === "Enter") {
+          console.log("Enter key pressed, calling verifyLicense");
+          verifyLicense();
+        }
+      });
+
+      console.log("License HTML script loaded");
+    </script>
+  </body>
+</html>

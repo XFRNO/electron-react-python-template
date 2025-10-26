@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -7,7 +7,21 @@
     <title>Electron React Python Template</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div
+      id="loading-screen"
+      style="
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #000;
+        color: #fff;
+        font-family: sans-serif;
+      "
+    >
+      <h1>Loading...</h1>
+    </div>
+    <div id="root" style="display: none"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

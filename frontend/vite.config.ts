@@ -19,6 +19,38 @@ export default defineConfig({
   build: {
     outDir: "dist",
     emptyOutDir: true,
+    // Optimize for production performance
+    minify: "esbuild",
+    cssMinify: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Split vendor chunks for better caching
+          vendor: ["react", "react-dom"],
+          router: ["@tanstack/react-router"],
+          ui: [
+            "@radix-ui/react-dialog",
+            "@radix-ui/react-dropdown-menu",
+            "@radix-ui/react-tabs",
+          ],
+        },
+      },
+    },
+    // Enable chunking optimizations
+    chunkSizeWarningLimit: 1000,
+    // Optimize assets
+    assetsInlineLimit: 4096,
   },
   base: "./", // 👈 CRUCIAL for Electron (use relative paths)
+  // Optimize dependencies
+  optimizeDeps: {
+    include: ["react", "react-dom", "@tanstack/react-router"],
+  },
+  // Server optimizations
+  server: {
+    // Improve dev server performance
+    watch: {
+      ignored: ["**/dist/**", "**/node_modules/**"],
+    },
+  },
 });

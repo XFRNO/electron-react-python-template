@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Loading</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+        background-color: #1a1a1a;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        overflow: hidden;
+        opacity: 1;
+        transition: opacity 0.5s ease-out;
+      }
+
+      .container {
+        text-align: center;
+      }
+
+      h1 {
+        font-size: 24px;
+        margin-bottom: 20px;
+      }
+
+      .loader {
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top: 4px solid white;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin-bottom: 20px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .error {
+        color: #ff6b6b;
+        display: none;
+        max-width: 80%;
+        text-align: center;
+      }
+
+      .fade-out {
+        opacity: 0;
+      }
+
+      .support-info {
+        font-size: 12px;
+        opacity: 0.7;
+        margin-top: 30px;
+        padding-top: 15px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .support-email {
+        color: #4dabf7;
+        text-decoration: none;
+      }
+
+      .support-email:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Loading Video Downloader</h1>
+      <div class="loader" id="loader"></div>
+      <div class="error" id="error-message">
+        Failed to start the application. Please try again or contact support.
+      </div>
+      <div class="support-info">
+        Need help? Contact support at
+        <a href="mailto:contact@xfrno.com" class="support-email"
+          >contact@xfrno.com</a
+        >
+      </div>
+    </div>
+
+    <script>
+      // Expose functions to be called from main process
+      window.splashApi = {
+        showError: (message) => {
+          document.getElementById("loader").style.display = "none";
+          document.getElementById("error-message").textContent =
+            message ||
+            "Failed to start the application. Please try again or contact support.";
+          document.getElementById("error-message").style.display = "block";
+        },
+        fadeOut: () => {
+          document.body.classList.add("fade-out");
+          return new Promise((resolve) => setTimeout(resolve, 500)); // Return promise that resolves after fade animation
+        },
+      };
+    </script>
+  </body>
+</html>

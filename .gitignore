@@ -128,7 +128,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
@@ -273,3 +272,11 @@ frontend/build/
 # Temporary files
 tmp/
 temp/
+
+# qoder
+*qoder
+
+# downloads db
+downloads.db
+builds
+test_cookies.txt

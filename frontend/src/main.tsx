@@ -11,15 +11,11 @@ import "./index.css";
 // Import the generated route tree
 import { routeTree } from "./routeTree.gen";
 
-// Create a memory history instance to initialize the router so it doesn't break when compiled:
-// const memoryHistory = createMemoryHistory({
-//   initialEntries: ["/"], // Pass your initial url
-// });
-
-const hashHistory = createHashHistory();
-
 // Create a new router instance
-const router = createRouter({ routeTree, history: hashHistory });
+const router = createRouter({
+  routeTree,
+  history: createHashHistory(), // <-- important for Electron!
+});
 
 // Register the router instance for type safety
 declare module "@tanstack/react-router" {
@@ -44,3 +40,13 @@ createRoot(document.getElementById("root")!).render(
     </QueryClientProvider>
   </StrictMode>
 );
+
+// Hide loading screen and show app when content is loaded
+document.addEventListener("DOMContentLoaded", () => {
+  const loadingScreen = document.getElementById("loading-screen");
+  const rootElement = document.getElementById("root");
+  if (loadingScreen && rootElement) {
+    loadingScreen.style.display = "none";
+    rootElement.style.display = "block";
+  }
+});
