@@ -31,7 +31,9 @@ export default defineConfig({
           ui: [
             "@radix-ui/react-dialog",
             "@radix-ui/react-dropdown-menu",
+            "@radix-ui/react-tooltip",
             "@radix-ui/react-tabs",
+            "@radix-ui/react-alert-dialog",
           ],
         },
       },
