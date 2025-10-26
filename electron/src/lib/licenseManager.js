@@ -8,7 +8,7 @@ const {
 
 // Product ID for Gumroad - this needs to be your actual product ID from Gumroad
 // For products created after Jan 9, 2023, use the product ID, not permalink
-const GUMROAD_PRODUCT_ID = "JQB2OmIkLg5JZ-VJpjKXBg==";
+const GUMROAD_PRODUCT_ID = "tbU32GxrR5IQl9j7KXzqRg==";
 
 // Shared state object
 const licenseState = {
