@@ -3,6 +3,10 @@ const path = require("path");
 const fs = require("fs");
 const { spawn } = require("child_process");
 const waitOn = require("wait-on");
+const {
+  launchBackend,
+  killBackendProcess,
+} = require("./src/main/backend/backendManager");
 
 const isDev = !app.isPackaged;
 
@@ -54,11 +58,7 @@ function killChildren() {
   }
 
   try {
-    if (backendProc) {
-      console.log("Killing backend process...");
-      backendProc.kill("SIGTERM");
-      backendProc = null;
-    }
+    killBackendProcess(); // Use the killBackendProcess from backendManager
   } catch (error) {
     console.error("Error killing backend process:", error);
   }
@@ -90,90 +90,7 @@ async function launchFrontend() {
 }
 
 /* ---------- backend (FastAPI) ------------------------------------------ */
-async function launchBackend(frontendURL) {
-  backendPort = await getPort();
-
-  if (!fs.existsSync(BACKEND_EXE)) {
-    console.error(`Backend executable not found: ${BACKEND_EXE}`);
-    console.error(`Current directory: ${process.cwd()}`);
-    console.error(`Resources path: ${process.resourcesPath}`);
-    throw new Error(`Backend executable not found:\n${BACKEND_EXE}`);
-  }
-
-  console.log(`Starting backend on port ${backendPort}`);
-  console.log(`Backend executable: ${BACKEND_EXE}`);
-
-  const env = {
-    ...process.env,
-    PYTHONUNBUFFERED: "1",
-    BACKEND_PORT: String(backendPort),
-    FRONTEND_PORT: String(frontendPort),
-    FRONTEND_URL: frontendURL || "",
-  };
-
-  if (isDev) {
-    const python = BACKEND_EXE;
-    console.log(`Starting backend in DEV mode with: ${python} -m uvicorn`);
-
-    backendProc = spawn(
-      python,
-      [
-        "-m",
-        "uvicorn",
-        "main:app",
-        "--host",
-        "127.0.0.1",
-        "--port",
-        String(backendPort),
-      ],
-      { cwd: BACKEND_DIR, env, stdio: "inherit" }
-    );
-  } else {
-    console.log(`Starting backend in PRODUCTION mode with: ${BACKEND_EXE}`);
-
-    backendProc = spawn(BACKEND_EXE, [], {
-      cwd: process.resourcesPath,
-      env,
-      stdio: ["ignore", "pipe", "pipe"],
-      detached: true,
-      shell: false,
-    });
-
-    backendProc.unref();
-
-    backendProc.stdout.on("data", (data) => {
-      console.log(`[backend stdout] ${data.toString().trim()}`);
-    });
-
-    backendProc.stderr.on("data", (data) => {
-      console.error(`[backend stderr] ${data.toString().trim()}`);
-    });
-
-    backendProc.on("error", (err) => {
-      console.error(`[backend error] ${err.message}`);
-    });
-
-    backendProc.on("exit", (code, signal) => {
-      console.log(`[backend exit] code: ${code}, signal: ${signal}`);
-    });
-  }
-
-  try {
-    console.log(
-      `Waiting for backend to be ready at http://localhost:${backendPort}/docs`
-    );
-    await waitOn({
-      resources: [`http://localhost:${backendPort}/docs`],
-      timeout: 30000,
-      delay: 1000,
-      interval: 1000,
-    });
-    console.log(`✅ Backend is ready!`);
-  } catch (error) {
-    console.error(`Timeout waiting for backend: ${error.message}`);
-    throw new Error(`Backend failed to start: ${error.message}`);
-  }
-}
+// Removed the duplicate launchBackend function from here
 
 /* ---------- BrowserWindow ---------------------------------------------- */
 async function createWindow() {
@@ -205,11 +122,12 @@ async function createWindow() {
 
   if (isDev) {
     const url = await launchFrontend();
-    await launchBackend(url);
+    await launchBackend(isDev, ROOT, url, frontendPort); // Use the launchBackend from backendManager
     console.log(`Loading frontend in dev mode: ${url}`);
     mainWindow.loadURL(url);
   } else {
-    await launchBackend();
+    const url = await launchFrontend(); // Launch frontend first to get the port
+    await launchBackend(isDev, ROOT, url, frontendPort); // Use the launchBackend from backendManager
     const frontendPath = path.join(FRONTEND, "index.html");
     console.log(`Loading frontend in prod mode from: ${frontendPath}`);
     mainWindow.loadFile(frontendPath);

@@ -39,7 +39,7 @@ async function isBackendReadyPing(port) {
     const req = http.get(`http://localhost:${port}/docs`, (res) => {
       const elapsed = Date.now() - startTime;
       const isReady = res.statusCode === 200;
-      Logger.log(
+      console.log(
         `Backend ping attempt ${++pingAttempts}: ${
           isReady ? "✅ Ready" : "⏳ Not ready"
         } (HTTP ${res.statusCode}, took ${elapsed}ms)`
@@ -48,7 +48,7 @@ async function isBackendReadyPing(port) {
     });
     req.on("error", (err) => {
       const elapsed = Date.now() - startTime;
-      Logger.log(
+      console.log(
         `Backend ping attempt ${++pingAttempts}: ❌ Error - ${
           err.message
         } (took ${elapsed}ms)`
@@ -57,7 +57,7 @@ async function isBackendReadyPing(port) {
     });
     req.setTimeout(1000, () => {
       const elapsed = Date.now() - startTime;
-      Logger.log(
+      console.log(
         `Backend ping attempt ${++pingAttempts}: ⏳ Timeout (took ${elapsed}ms)`
       );
       req.destroy();
@@ -73,7 +73,7 @@ async function isBackendReadyPing(port) {
  */
 async function waitForBackendReady(port) {
   const waitStartTime = Date.now();
-  Logger.log(`Waiting for backend to be ready on port ${port}...`);
+  console.log(`Waiting for backend to be ready on port ${port}...`);
   pingAttempts = 0; // Reset ping attempts counter
 
   // Show main window immediately while waiting for backend
@@ -86,7 +86,7 @@ async function waitForBackendReady(port) {
 
     if (ready) {
       isBackendReady = true;
-      Logger.log(`Backend is ready! (Total wait time: ${totalWaitTime}ms)`);
+      console.log(`Backend is ready! (Total wait time: ${totalWaitTime}ms)`);
 
       // Notify all callbacks
       backendReadyCallbacks.forEach((callback) => callback());
@@ -99,18 +99,18 @@ async function waitForBackendReady(port) {
 
     // Check if we've exceeded the 30-second timeout
     if (totalWaitTime > 30000) {
-      Logger.log(
+      console.log(
         `⚠️  Backend startup taking longer than 30s - still starting... (Total wait time: ${totalWaitTime}ms)`
       );
       // Continue waiting but log every 5 seconds
       if (totalWaitTime % 5000 < 500) {
         // Log every ~5 seconds
-        Logger.log(
+        console.log(
           `Still waiting for backend... (Total wait time: ${totalWaitTime}ms)`
         );
       }
     } else {
-      Logger.log(
+      console.log(
         `Backend not ready yet, continuing to wait... (Total wait time: ${totalWaitTime}ms)`
       );
     }
@@ -142,7 +142,7 @@ async function showError(errorMsg) {
   if (SHOW_SPLASH_SCREEN) {
     await showSplashError(errorMsg);
   } else {
-    Logger.error(errorMsg);
+    console.error(errorMsg);
   }
 }
 
@@ -155,8 +155,8 @@ async function showError(errorMsg) {
  * @returns {Promise<void>}
  */
 async function launchBackend(isDev, rootPath, frontendURL, frontendPortParam) {
-  const startTime = Date.now();
-  Logger.log(
+  console.time('Backend Launch');
+  console.log(
     `Starting backend launch (${isDev ? "development" : "production"})`
   );
 
@@ -164,9 +164,12 @@ async function launchBackend(isDev, rootPath, frontendURL, frontendPortParam) {
   isBackendReady = false;
   backendReadyCallbacks = [];
 
+  console.time('Get Port');
   backendPort = await getPort();
+  console.timeEnd('Get Port');
 
   let BACKEND_EXE;
+  console.time('Backend Executable Path Determination');
   if (isDev) {
     const BACKEND_DIR = path.join(rootPath, "../backend");
     BACKEND_EXE =
@@ -198,16 +201,17 @@ async function launchBackend(isDev, rootPath, frontendURL, frontendPortParam) {
     // Check what's available and prefer faster options
     if (fs.existsSync(onedirPath)) {
       BACKEND_EXE = onedirPath;
-      Logger.log("Using --onedir build for faster startup");
+      console.log("Using --onedir build for faster startup");
     } else if (fs.existsSync(onefilePath)) {
       BACKEND_EXE = onefilePath;
-      Logger.log("Using --onefile build");
+      console.log("Using --onefile build");
     } else {
       const errorMsg = `Backend executable not found:\n${onedirPath}\n${onefilePath}`;
       await showError(errorMsg);
       throw new Error(errorMsg);
     }
   }
+  console.timeEnd('Backend Executable Path Determination');
 
   if (!fs.existsSync(BACKEND_EXE)) {
     const errorMsg = `Backend executable not found:\n${BACKEND_EXE}`;
@@ -228,15 +232,16 @@ async function launchBackend(isDev, rootPath, frontendURL, frontendPortParam) {
     DOWNLOADS_DB_PATH: storagePaths.downloadsDbPath,
   };
 
-  Logger.log(`Starting backend server on port ${backendPort}`);
-  Logger.log(`Using backend executable: ${BACKEND_EXE}`);
-  Logger.log(`Cookies path: ${storagePaths.cookiesPath}`);
-  Logger.log(`Downloads DB path: ${storagePaths.downloadsDbPath}`);
+  console.log(`Starting backend server on port ${backendPort}`);
+  console.log(`Using backend executable: ${BACKEND_EXE}`);
+  console.log(`Cookies path: ${storagePaths.cookiesPath}`);
+  console.log(`Downloads DB path: ${storagePaths.downloadsDbPath}`);
 
   if (isDev) {
     const python = BACKEND_EXE;
     const backendDir = path.join(rootPath, "../backend");
     // In development, run with uvicorn directly for better control
+    console.time('Spawn Backend Process');
     backendProc = spawn(
       python,
       [
@@ -255,33 +260,35 @@ async function launchBackend(isDev, rootPath, frontendURL, frontendPortParam) {
         stdio: ["ignore", "pipe", "pipe"],
       }
     );
+    console.timeEnd('Spawn Backend Process');
 
     // Log backend output for debugging in development too
     backendProc.stdout.on("data", (data) => {
-      Logger.log(`[Backend STDOUT]: ${data.toString().trim()}`);
+      console.log(`[Backend STDOUT]: ${data.toString().trim()}`);
     });
 
     backendProc.stderr.on("data", (data) => {
-      Logger.log(`[Backend STDERR]: ${data.toString().trim()}`);
+      console.log(`[Backend STDERR]: ${data.toString().trim()}`);
     });
 
     backendProc.on("error", async (err) => {
       const errorMsg = `Backend process error: ${err.message}`;
-      Logger.error(errorMsg);
+      console.error(errorMsg);
       await showError(errorMsg);
     });
 
     backendProc.on("exit", async (code, signal) => {
       if (code !== 0 && code !== null) {
         const errorMsg = `Backend process exited with code ${code}`;
-        Logger.error(errorMsg);
+        console.error(errorMsg);
         await showError(errorMsg);
       } else {
-        Logger.log(`Backend process exited normally with code ${code}`);
+        console.log(`Backend process exited normally with code ${code}`);
       }
     });
   } else {
     // For production, spawn the backend executable
+    console.time('Spawn Backend Process');
     backendProc = spawn(BACKEND_EXE, [], {
       cwd: path.dirname(BACKEND_EXE),
       env,
@@ -289,31 +296,32 @@ async function launchBackend(isDev, rootPath, frontendURL, frontendPortParam) {
       detached: true,
       shell: false,
     });
+    console.timeEnd('Spawn Backend Process');
 
     backendProc.unref();
 
     // Log backend output for debugging
     backendProc.stdout.on("data", (data) => {
-      Logger.log(`[Backend STDOUT]: ${data.toString().trim()}`);
+      console.log(`[Backend STDOUT]: ${data.toString().trim()}`);
     });
 
     backendProc.stderr.on("data", (data) => {
-      Logger.log(`[Backend STDERR]: ${data.toString().trim()}`);
+      console.log(`[Backend STDERR]: ${data.toString().trim()}`);
     });
 
     backendProc.on("error", async (err) => {
       const errorMsg = `Backend process error: ${err.message}`;
-      Logger.error(errorMsg);
+      console.error(errorMsg);
       await showError(errorMsg);
     });
 
     backendProc.on("exit", async (code, signal) => {
       if (code !== 0 && code !== null) {
         const errorMsg = `Backend process exited with code ${code}`;
-        Logger.error(errorMsg);
+        console.error(errorMsg);
         await showError(errorMsg);
       } else {
-        Logger.log(`Backend process exited normally with code ${code}`);
+        console.log(`Backend process exited normally with code ${code}`);
       }
     });
   }
@@ -321,12 +329,13 @@ async function launchBackend(isDev, rootPath, frontendURL, frontendPortParam) {
   // Start background monitoring for backend readiness
   waitForBackendReady(backendPort)
     .then(() => {
-      const elapsed = Date.now() - startTime;
-      Logger.log(`Backend started successfully (took ${elapsed}ms)`);
+      const elapsed = Date.now() - waitStartTime;
+      console.log(`Backend started successfully (took ${elapsed}ms)`);
+      console.timeEnd('Backend Launch');
     })
     .catch((error) => {
       const errorMsg = `Backend failed to start: ${error.message}`;
-      Logger.error(errorMsg);
+      console.error(errorMsg);
       showError(errorMsg);
     });
 }
@@ -339,10 +348,10 @@ function killBackendProcess() {
     if (backendProc) {
       backendProc.kill("SIGTERM");
       backendProc = null;
-      Logger.log("Backend process terminated");
+      console.log("Backend process terminated");
     }
   } catch (error) {
-    Logger.error("Error killing backend process:", error);
+    console.error("Error killing backend process:", error);
   }
 }
 
@@ -355,7 +364,7 @@ function killAllProcesses() {
     const { killFrontendProcess } = require("../frontend/frontendManager");
     killFrontendProcess();
   } catch (error) {
-    Logger.error("Error importing frontend manager:", error);
+    console.error("Error importing frontend manager:", error);
   }
   killBackendProcess();
 }

@@ -2,23 +2,32 @@
    "name": "electron-react-python-template",
    "version": "1.0.0",
    "description": "A template for building cross-platform desktop applications with Electron, React, and Python",
-   "main": "main.js",
+   "main": "src/main/main.js",
    "scripts": {
       "dev": "electron .",
       "start": "electron .",
       "build:electron": "electron-builder",
-      "build": "bash ../build.sh"
+      "build": "bash ../build.sh",
+      "build:mac-arm64": "electron-builder --mac --arm64",
+      "build:mac-x64": "electron-builder --mac --x64",
+      "build:mac-universal": "electron-builder --mac --universal",
+      "build:win": "electron-builder --win nsis --x64",
+      "build:linux": "electron-builder --linux AppImage deb --x64",
+      "build:all": "electron-builder --mac --win --linux",
+      "gen:icons": "npm run gen:icns && npm run gen:ico && npm run gen:pngs",
+      "gen:icns": "magick assets/icon.png -resize 1024x1024 assets/icon.icns",
+      "gen:ico": "magick assets/icon.png -define icon:auto-resize=256,128,64,48,32,16 assets/icon.ico",
+      "gen:pngs": "mkdir -p assets/icons && magick assets/icon.png -resize 512x512 assets/icons/icon-512x512.png && magick assets/icon.png -resize 256x256 assets/icons/icon-256x256.png && magick assets/icon.png -resize 128x128 assets/icons/icon-128x128.png && magick assets/icon.png -resize 64x64 assets/icons/icon-64x64.png && magick assets/icon.png -resize 32x32 assets/icons/icon-32x32.png"
    },
    "build": {
-      "appId": "com.template.electron-react-python",
+      "appId": "com.xfrno.electron-react-python-template",
       "productName": "Electron React Python Template",
       "asarUnpack": [
          "backend/**"
       ],
       "files": [
-         "main.js",
-         "preload.js",
-         "package.json"
+         "**/*",
+         "lib/**"
       ],
       "extraResources": [
          {
@@ -28,33 +37,49 @@
          {
             "from": "../backend/dist/backend_main",
             "to": "backend/backend_main"
+         },
+         {
+            "from": "./src/windows/license.html",
+            "to": "license.html"
+         },
+         {
+            "from": "./src/windows/splash.html",
+            "to": "splash.html"
+         },
+         {
+            "from": "./assets/icon.png",
+            "to": "assets/icon.png"
          }
       ],
       "mac": {
-         "category": "public.app-category.developer-tools",
-         "target": "dmg"
+         "category": "public.app-category.utilities",
+         "target": "dmg",
+         "icon": "assets/icon.icns"
       },
       "win": {
-         "target": "nsis"
+         "target": "nsis",
+         "icon": "assets/icon.ico"
       },
       "linux": {
-         "target": "AppImage"
+         "target": "AppImage",
+         "icon": "assets/icon.png"
       }
    },
    "keywords": [
       "electron",
       "react",
       "python",
-      "template",
+      "fastapi",
       "desktop",
-      "application"
+      "video",
+      "downloader"
    ],
-   "author": "Open Source Community",
+   "author": "XFRNO",
    "license": "MIT",
    "bugs": {
-      "url": "https://github.com/your-username/electron-react-python-template/issues"
+      "url": "https://github.com/XFRNO/electron-react-python-template/issues"
    },
-   "homepage": "https://github.com/your-username/electron-react-python-template#readme",
+   "homepage": "https://github.com/XFRNO/electron-react-python-template#readme",
    "dependencies": {
       "electron-is-dev": "^2.0.0",
       "electron-store": "^10.1.0",
@@ -64,6 +89,7 @@
    "devDependencies": {
       "concurrently": "^8.2.2",
       "electron": "^29.0.0",
-      "electron-builder": "^24.9.1"
+      "electron-builder": "^24.9.1",
+      "htmlhint": "^1.7.1"
    }
 }
