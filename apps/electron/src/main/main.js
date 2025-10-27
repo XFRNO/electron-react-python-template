@@ -64,22 +64,19 @@ async function createWindow() {
 
   try {
     if (isDev) {
-      // Launch frontend development server
+      // Development mode:
+      // Turborepo orchestrates the Vite dev server and FastAPI backend.
+      // Electron should NOT spawn any servers. It only waits for the dev frontend URL.
       const frontendUrl = await launchFrontend(isDev, ROOT);
       loadMainWindowContent(frontendUrl);
-
-      // Start backend in parallel
-      launchBackend(isDev, ROOT, frontendUrl, getFrontendPort()).catch(
-        (err) => {
-          Logger.error("Backend startup failed:", err);
-        }
-      );
+      // No backend launch in dev mode.
     } else {
-      // Production mode
+      // Production mode:
+      // Load built frontend and start the packaged backend executable.
       const frontendPath = await launchFrontend(isDev, ROOT);
       loadMainWindowContent(frontendPath);
 
-      // Start backend in parallel
+      // Start backend in parallel (production only)
       launchBackend(isDev, ROOT).catch((err) => {
         Logger.error("Backend startup failed:", err);
       });

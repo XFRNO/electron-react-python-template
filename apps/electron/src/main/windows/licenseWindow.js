@@ -32,7 +32,7 @@ async function createLicenseWindow(rootPath, isDev) {
     minimizable: false,
     maximizable: false,
     autoHideMenuBar: true,
-    show: false,
+    show: true,
     backgroundColor: "#1a1a2e",
     webPreferences: {
       contextIsolation: true,

@@ -1244,6 +1244,7 @@ async function verifyWithGumroad(licenseKey, incrementUsesCount = false) {
 }
 
 async function showLicenseWindow(errorTitle, errorMessage) {
+  console.log("Attempting to show license window.");
   console.time("License.showLicenseWindow"); // Start timing for showLicenseWindow
   console.log("Creating license window");
 
@@ -1257,10 +1258,12 @@ async function showLicenseWindow(errorTitle, errorMessage) {
       "isDev:",
       licenseState.isDev
     );
+    console.log("Before calling createLicenseWindow.");
     licenseState.licenseWindow = await createLicenseWindow(
       licenseState.rootPath,
       licenseState.isDev
     );
+    console.log("After calling createLicenseWindow. licenseWindow is now: ", !!licenseState.licenseWindow);
 
     // If we have error information, send it to the license window
     if (errorTitle && errorMessage && licenseState.licenseWindow) {

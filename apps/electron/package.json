@@ -3,8 +3,8 @@
    "version": "1.0.0",
    "description": "A template for building cross-platform desktop applications with Electron, React, and Python",
    "main": "src/main/main.js",
-   "scripts": {
-      "dev": "concurrently \"npm run dev --workspace frontend\" \"wait-on http://localhost:5173 && electron .\"",
+  "scripts": {
+      "dev": "cross-env FRONTEND_URL=http://localhost:5173 electron .",
       "start": "electron .",
       "build": "electron-builder",
       "build:electron": "electron-builder",
@@ -13,7 +13,7 @@
       "build:win": "electron-builder --win nsis --x64",
       "build:linux": "electron-builder --linux AppImage deb --x64",
       "build:all": "electron-builder --mac --win --linux"
-   },
+  },
    "build": {
       "appId": "com.xfrno.electron",
       "productName": "Electron React Python Template",
@@ -82,10 +82,10 @@
       "get-port": "^7.1.0",
       "wait-on": "^7.2.0"
    },
-   "devDependencies": {
-      "concurrently": "^8.2.2",
+  "devDependencies": {
+      "cross-env": "^7.0.3",
       "electron": "29.4.6",
       "electron-builder": "^24.9.1",
       "htmlhint": "^1.7.1"
-   }
+  }
 }

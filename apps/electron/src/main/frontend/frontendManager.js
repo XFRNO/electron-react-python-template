@@ -1,10 +1,8 @@
 const path = require("path");
-const { spawn } = require("child_process");
 const waitOn = require("wait-on");
 const fs = require("fs");
 const { Logger } = require("../utils/logger");
 
-let frontendProc = null;
 let frontendPort = null;
 
 /**
@@ -31,24 +29,27 @@ async function launchFrontend(isDev, rootPath) {
     : path.join(process.resourcesPath, "frontend");
 
   if (isDev) {
-    frontendPort = await getPort();
-    const url = `http://localhost:${frontendPort}`;
-    const cmd = process.platform === "win32" ? "npm.cmd" : "npm";
-    frontendProc = spawn(
-      cmd,
-      ["run", "dev", "--", "--port", String(frontendPort)],
-      {
-        cwd: FRONTEND,
-        shell: true,
-        stdio: "inherit",
-      }
-    );
+    // In development, DO NOT spawn the Vite server.
+    // Turborepo orchestrates the dev processes.
+    // We simply wait for the existing dev server and return its URL.
+    const envUrl = process.env.FRONTEND_URL;
+    const envPort = process.env.FRONTEND_PORT;
+    const url = envUrl || `http://localhost:${envPort || 5173}`;
 
-    await waitOn({ resources: [url], timeout: 20000 });
-    Logger.log(
-      `✅ Frontend ready at ${url} (took ${Date.now() - startTime}ms)`
-    );
-    return url;
+    try {
+      await waitOn({ resources: [url], timeout: 30000 });
+      const parsed = new URL(url);
+      frontendPort = Number(parsed.port) || 5173;
+      Logger.log(
+        `✅ Frontend dev server detected at ${url} (took ${Date.now() - startTime}ms)`
+      );
+      return url;
+    } catch (err) {
+      Logger.error(
+        `❌ Frontend dev server not reachable at ${url}: ${err.message}`
+      );
+      throw err;
+    }
   }
 
   const prodIndex = path.join(FRONTEND, "index.html");
@@ -72,15 +73,8 @@ async function launchFrontend(isDev, rootPath) {
  * Kills the frontend process if running
  */
 function killFrontendProcess() {
-  try {
-    if (frontendProc) {
-      frontendProc.kill("SIGTERM");
-      frontendProc = null;
-      Logger.log("Frontend process terminated");
-    }
-  } catch (error) {
-    Logger.error("Error killing frontend process:", error);
-  }
+  // No-op in the new dev flow since Electron no longer spawns the dev server.
+  // Left in place for production safety and backwards compatibility.
 }
 
 /**
