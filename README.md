@@ -1,119 +1,135 @@
-# Electron + React + Python Template
+# Turborepo starter
 
-A complete template for building cross-platform desktop applications with:
-- Frontend: React + Vite + TypeScript + TailwindCSS + Shadcn + TanStack Router & Query
-- Backend: Python + FastAPI + Uvicorn
-- Desktop: Electron
+This Turborepo starter is maintained by the Turborepo core team.
 
-This project is intended as an open-source template. I'm still learning and figuring things out, so please bear with any imperfections. If you'd like to contribute, you're more than welcome to!
+## Using this example
 
-## Features
+Run the following command:
 
-- Light and dark themes with system preference detection
-- Cross-platform support (Windows, macOS, Linux)
-- Proper application shutdown (closes both frontend and backend)
-- Development and production modes
-- Build script for packaging the entire application
-- API communication between frontend and backend
-
-## Project Structure
-
-```
-.
-├── frontend/          # React + Vite frontend
-├── backend/           # Python FastAPI backend
-├── electron/          # Electron wrapper
-└── build.sh           # Build script
+```sh
+npx create-turbo@latest
 ```
 
-## Development
+## What's inside?
 
-### Prerequisites
+This Turborepo includes the following packages/apps:
 
-- Node.js (v16 or higher)
-- Python 3.7 or higher
-- npm
+### Apps and Packages
 
-### Setup
+- `docs`: a [Next.js](https://nextjs.org/) app
+- `web`: another [Next.js](https://nextjs.org/) app
+- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
+- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
+- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
 
-1. Install frontend dependencies:
-   ```bash
-   cd frontend
-   npm install
-   ```
+Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
 
-2. Set up Python virtual environment and install dependencies:
-   ```bash
-   cd backend
-   python3 -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   pip install -r requirements.txt
-   ```
+### Utilities
 
-3. Install Electron dependencies:
-   ```bash
-   cd electron
-   npm install
-   ```
+This Turborepo has some additional tools already setup for you:
 
-### Running in Development Mode
+- [TypeScript](https://www.typescriptlang.org/) for static type checking
+- [ESLint](https://eslint.org/) for code linting
+- [Prettier](https://prettier.io) for code formatting
 
-```bash
-cd electron
-npm run dev
+### Build
+
+To build all apps and packages, run the following command:
+
+```
+cd my-turborepo
+
+# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
+turbo build
+
+# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
+npx turbo build
+yarn dlx turbo build
+pnpm exec turbo build
 ```
 
-This will start:
-1. The React development server (Vite)
-2. The Python FastAPI backend
-3. The Electron application
+You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
 
-### Building for Production
+```
+# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
+turbo build --filter=docs
 
-```bash
-./build.sh
+# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
+npx turbo build --filter=docs
+yarn exec turbo build --filter=docs
+pnpm exec turbo build --filter=docs
 ```
 
-This will:
-1. Build the React frontend
-2. Package the Python backend
-3. Create distributable Electron app
+### Develop
 
-The build artifacts will be in `electron/dist/`.
+To develop all apps and packages, run the following command:
 
-## API Endpoints
+```
+cd my-turborepo
 
-- `GET /api/hello` - Returns a test message from the Python backend
-- `GET /api/status` - Returns backend status information
+# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
+turbo dev
 
-## Technologies Used
+# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
+npx turbo dev
+yarn exec turbo dev
+pnpm exec turbo dev
+```
 
-### Frontend
-- React 18
-- Vite
-- TypeScript
-- TailwindCSS v4
-- Shadcn UI components
-- TanStack Router
-- TanStack Query
+You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
 
-### Backend
-- Python 3.7+
-- FastAPI
-- Uvicorn
+```
+# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
+turbo dev --filter=web
 
-### Desktop
-- Electron 29
+# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
+npx turbo dev --filter=web
+yarn exec turbo dev --filter=web
+pnpm exec turbo dev --filter=web
+```
 
-## Customization
+### Remote Caching
 
-- Frontend port: 5173 (Vite default)
-- Backend port: 8001 (can be configured with PORT environment variable)
+> [!TIP]
+> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
 
-## Contributing
+Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
 
-I'm still learning and figuring things out, so if you see something that could be improved or want to add new features, feel free to contribute! Please open an issue or submit a pull request.
+By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
 
-## License
+```
+cd my-turborepo
 
-MIT
+# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
+turbo login
+
+# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
+npx turbo login
+yarn exec turbo login
+pnpm exec turbo login
+```
+
+This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+
+Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+
+```
+# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
+turbo link
+
+# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
+npx turbo link
+yarn exec turbo link
+pnpm exec turbo link
+```
+
+## Useful Links
+
+Learn more about the power of Turborepo:
+
+- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
+- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
+- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
+- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
+- [Configuration Options](https://turborepo.com/docs/reference/configuration)
+- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)

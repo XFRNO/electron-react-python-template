@@ -1,29 +1,25 @@
 {
-   "name": "electron-react-python-template",
+   "name": "electron",
    "version": "1.0.0",
    "description": "A template for building cross-platform desktop applications with Electron, React, and Python",
    "main": "src/main/main.js",
    "scripts": {
-      "dev": "electron .",
+      "dev": "concurrently \"npm run dev --workspace frontend\" \"wait-on http://localhost:5173 && electron .\"",
       "start": "electron .",
+      "build": "electron-builder",
       "build:electron": "electron-builder",
-      "build": "bash ../build.sh",
       "build:mac-arm64": "electron-builder --mac --arm64",
       "build:mac-x64": "electron-builder --mac --x64",
-      "build:mac-universal": "electron-builder --mac --universal",
       "build:win": "electron-builder --win nsis --x64",
       "build:linux": "electron-builder --linux AppImage deb --x64",
-      "build:all": "electron-builder --mac --win --linux",
-      "gen:icons": "npm run gen:icns && npm run gen:ico && npm run gen:pngs",
-      "gen:icns": "magick assets/icon.png -resize 1024x1024 assets/icon.icns",
-      "gen:ico": "magick assets/icon.png -define icon:auto-resize=256,128,64,48,32,16 assets/icon.ico",
-      "gen:pngs": "mkdir -p assets/icons && magick assets/icon.png -resize 512x512 assets/icons/icon-512x512.png && magick assets/icon.png -resize 256x256 assets/icons/icon-256x256.png && magick assets/icon.png -resize 128x128 assets/icons/icon-128x128.png && magick assets/icon.png -resize 64x64 assets/icons/icon-64x64.png && magick assets/icon.png -resize 32x32 assets/icons/icon-32x32.png"
+      "build:all": "electron-builder --mac --win --linux"
    },
    "build": {
-      "appId": "com.xfrno.electron-react-python-template",
+      "appId": "com.xfrno.electron",
       "productName": "Electron React Python Template",
       "asarUnpack": [
-         "backend/**"
+         "backend/**",
+         "src/**"
       ],
       "files": [
          "**/*",
@@ -35,7 +31,7 @@
             "to": "frontend"
          },
          {
-            "from": "../backend/dist/backend_main",
+            "from": "../backend/dist/backend_main/backend_main",
             "to": "backend/backend_main"
          },
          {
@@ -88,7 +84,7 @@
    },
    "devDependencies": {
       "concurrently": "^8.2.2",
-      "electron": "^29.0.0",
+      "electron": "29.4.6",
       "electron-builder": "^24.9.1",
       "htmlhint": "^1.7.1"
    }
