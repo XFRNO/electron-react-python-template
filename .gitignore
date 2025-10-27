@@ -280,3 +280,7 @@ temp/
 downloads.db
 builds
 test_cookies.txt
+
+# Turborepo cache and artifacts
+.turbo/
+.turbo/cache/
