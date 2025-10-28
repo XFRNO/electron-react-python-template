@@ -3,7 +3,7 @@
    "version": "1.0.0",
    "description": "A template for building cross-platform desktop applications with Electron, React, and Python",
    "main": "src/main/main.js",
-  "scripts": {
+   "scripts": {
       "dev": "cross-env FRONTEND_URL=http://localhost:5173 electron .",
       "start": "electron .",
       "build": "electron-builder",
@@ -13,11 +13,13 @@
       "build:win": "electron-builder --win nsis --x64",
       "build:linux": "electron-builder --linux AppImage deb --x64",
       "build:all": "electron-builder --mac --win --linux"
-  },
+   },
    "build": {
       "appId": "com.xfrno.electron",
       "productName": "Electron React Python Template",
+      "asar": false,
       "asarUnpack": [
+         "**/node_modules/**",
          "backend/**",
          "src/**"
       ],
@@ -77,15 +79,19 @@
    },
    "homepage": "https://github.com/XFRNO/electron-react-python-template#readme",
    "dependencies": {
+      "atomically": "^2.1.0",
+      "conf": "^15.0.2",
+      "dot-prop": "^10.1.0",
       "electron-is-dev": "^2.0.0",
       "electron-store": "^10.1.0",
-      "get-port": "^7.1.0",
-      "wait-on": "^7.2.0"
+      "env-paths": "^3.0.0",
+      "get-port": "^7.1.0"
    },
-  "devDependencies": {
+   "devDependencies": {
       "cross-env": "^7.0.3",
       "electron": "29.4.6",
       "electron-builder": "^24.9.1",
-      "htmlhint": "^1.7.1"
-  }
+      "htmlhint": "^1.7.1",
+      "wait-on": "^9.0.1"
+   }
 }

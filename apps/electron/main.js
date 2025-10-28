@@ -2,7 +2,6 @@ const { app, BrowserWindow, ipcMain, dialog, shell } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const { spawn } = require("child_process");
-const waitOn = require("wait-on");
 const {
   launchBackend,
   killBackendProcess,
@@ -33,11 +32,20 @@ const BACKEND_EXE = isDev
     ? path.join(BACKEND_DIR, "venv", "Scripts", "python.exe")
     : path.join(BACKEND_DIR, "venv", "bin", "python3.10")
   : process.platform === "win32"
-  ? path.join(process.resourcesPath, "backend", "backend_main.exe")
-  : path.join(process.resourcesPath, "backend", "backend_main");
+    ? path.join(process.resourcesPath, "backend", "backend_main.exe")
+    : path.join(process.resourcesPath, "backend", "backend_main");
 
-// Debug log
-console.log(`Backend executable path: ${BACKEND_EXE}`);
+let waitOn = null;
+if (isDev) {
+  // Use dynamic import so it's not bundled in production
+  import("wait-on")
+    .then((mod) => {
+      waitOn = mod.default || mod;
+    })
+    .catch((err) => {
+      console.error("Failed to import wait-on:", err);
+    });
+}
 
 /* ---------- utilities --------------------------------------------------- */
 async function getPort() {
@@ -72,21 +80,22 @@ async function launchFrontend() {
   const url = `http://localhost:${frontendPort}`;
 
   if (isDev) {
-    console.log("🟢  Starting Vite frontend (dev)…");
+    console.log("🟢 Starting Vite frontend (dev)…");
     const cmd = process.platform === "win32" ? "npm.cmd" : "npm";
     frontendProc = spawn(
       cmd,
       ["run", "dev", "--", "--port", String(frontendPort)],
       { cwd: FRONTEND, shell: true, stdio: "inherit" }
     );
+
+    // Wait for frontend dev server to start
+    const waitOnModule = waitOn || (await import("wait-on")).default;
+    await waitOnModule({ resources: [url], timeout: 20000 });
+    return url;
   } else {
-    console.log("🔵  Loading frontend dist…");
-    // In prod, just load the index.html built by Vite
+    console.log("🔵 Loading frontend dist…");
     return `file://${path.join(FRONTEND, "index.html")}`;
   }
-
-  await waitOn({ resources: [url], timeout: 20000 });
-  return url;
 }
 
 /* ---------- backend (FastAPI) ------------------------------------------ */

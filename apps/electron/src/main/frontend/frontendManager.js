@@ -1,5 +1,4 @@
 const path = require("path");
-const waitOn = require("wait-on");
 const fs = require("fs");
 const { Logger } = require("../utils/logger");
 
@@ -12,6 +11,19 @@ let frontendPort = null;
 async function getPort() {
   const gp = (await import("get-port")).default;
   return gp();
+}
+
+let waitOn = null;
+
+/**
+ * Lazily loads wait-on only in dev
+ */
+async function loadWaitOn() {
+  if (!waitOn) {
+    const mod = await import("wait-on");
+    waitOn = mod.default || mod;
+  }
+  return waitOn;
 }
 
 /**
@@ -37,7 +49,8 @@ async function launchFrontend(isDev, rootPath) {
     const url = envUrl || `http://localhost:${envPort || 5173}`;
 
     try {
-      await waitOn({ resources: [url], timeout: 30000 });
+      const waitOnModule = await loadWaitOn();
+      await waitOnModule({ resources: [url], timeout: 30000 });
       const parsed = new URL(url);
       frontendPort = Number(parsed.port) || 5173;
       Logger.log(
