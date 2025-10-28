@@ -1,13 +1,14 @@
 {
    "name": "electron-react-python-template",
    "private": true,
+   "version": "1.0.0",
    "scripts": {
       "build": "turbo run build",
       "dev": "turbo run dev --parallel",
       "lint": "turbo run lint",
       "format": "prettier --write \"**/*.{ts,tsx,md}\"",
       "check-types": "turbo run check-types",
-      "clean": "echo 🧹 Cleaning workspace... && rm -rf node_modules apps/*/node_modules packages/*/node_modules && rm -f package-lock.json bun.lockb bun.lock yarn.lock pnpm-lock.yaml && rm -f apps/*/package-lock.json apps/*/bun.lockb apps/*/bun.lock && rm -f packages/*/package-lock.json packages/*/bun.lockb packages/*/bun.lock && rm -rf .turbo && echo 🧽 Clearing npm and bun caches... && npm cache clean --force || true && bun pm cache clean || true && echo ✅ Clean complete!"
+      "clean": "echo 🧹 Cleaning workspace... && rm -rf node_modules apps/*/node_modules packages/*/node_modules && rm -f package-lock.json bun.lockb bun.lock yarn.lock pnpm-lock.yaml && rm -f apps/*/package-lock.json apps/*/bun.lockb apps/*/bun.lock packages/*/package-lock.json packages/*/bun.lockb packages/*/bun.lock && rm -rf .turbo && echo 🧽 Clearing pnpm cache... && pnpm store prune && echo ✅ Clean complete!"
    },
    "devDependencies": {
       "prettier": "^3.6.2",
@@ -17,11 +18,5 @@
    "engines": {
       "node": ">=18"
    },
-   "packageManager": "bun@1.3.1",
-   "workspaces": [
-      "apps/frontend",
-      "apps/backend",
-      "apps/electron",
-      "packages/*"
-   ]
+   "packageManager": "pnpm@10.19.0"
 }

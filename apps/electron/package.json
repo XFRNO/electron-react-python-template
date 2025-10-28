@@ -79,12 +79,8 @@
    },
    "homepage": "https://github.com/XFRNO/electron-react-python-template#readme",
    "dependencies": {
-      "atomically": "^2.1.0",
-      "conf": "^15.0.2",
-      "dot-prop": "^10.1.0",
       "electron-is-dev": "^2.0.0",
       "electron-store": "^10.1.0",
-      "env-paths": "^3.0.0",
       "get-port": "^7.1.0"
    },
    "devDependencies": {
