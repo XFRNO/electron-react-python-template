@@ -65,21 +65,11 @@ function isNetworkError(error) {
 
 async function onAppLaunch(createMainWindowFunc) {
   console.time("License.onAppLaunch"); // Start timing for onAppLaunch
-  console.log("License.onAppLaunch called");
 
   // Store the createMainWindow function for later use
   licenseState.createMainWindow = createMainWindowFunc;
 
   const storedLicense = licenseState.store.get("licenseKey");
-  console.log(`Stored license key found: ${storedLicense ? "YES" : "NO"}`);
-  if (storedLicense) {
-    console.log(
-      `Stored license key (first 5 chars): ${storedLicense.substring(
-        0,
-        5
-      )}*****`
-    );
-  }
 
   if (storedLicense) {
     console.log("Found stored license, attempting to verify...");
@@ -1002,8 +992,6 @@ async function verifyWithGumroad(licenseKey, incrementUsesCount = false) {
       increment_uses_count: incrementUsesCount,
     });
 
-    console.log(`Sending request to Gumroad API with payload: ${postData}`);
-
     const options = {
       hostname: "api.gumroad.com",
       port: 443,
@@ -1027,11 +1015,6 @@ async function verifyWithGumroad(licenseKey, incrementUsesCount = false) {
         try {
           const response = JSON.parse(data);
           console.timeEnd("License.verifyWithGumroad"); // End timing for verifyWithGumroad
-
-          // Log the entire response from Gumroad for debugging
-          console.log(
-            `Gumroad API response: ${JSON.stringify(response, null, 2)}`
-          );
 
           // Check if the response indicates success
           if (response.success === true) {
@@ -1263,7 +1246,10 @@ async function showLicenseWindow(errorTitle, errorMessage) {
       licenseState.rootPath,
       licenseState.isDev
     );
-    console.log("After calling createLicenseWindow. licenseWindow is now: ", !!licenseState.licenseWindow);
+    console.log(
+      "After calling createLicenseWindow. licenseWindow is now: ",
+      !!licenseState.licenseWindow
+    );
 
     // If we have error information, send it to the license window
     if (errorTitle && errorMessage && licenseState.licenseWindow) {
