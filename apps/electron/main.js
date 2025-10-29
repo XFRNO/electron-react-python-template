@@ -1,215 +1,134 @@
-const { app, BrowserWindow, ipcMain, dialog, shell } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const { spawn } = require("child_process");
-const {
-  launchBackend,
-  killBackendProcess,
-} = require("./src/main/backend/backendManager");
+const waitOn = require("wait-on");
 
 const isDev = !app.isPackaged;
 
 /* ---------- constants / defaults --------------------------------------- */
-const DEFAULT_OPTIONS = { outputDir: app.getPath("downloads") };
-
-/* ---------- global refs ------------------------------------------------- */
 let mainWindow = null;
-let frontendProc = null;
 let backendProc = null;
-let frontendPort = null;
-let backendPort = null;
-let store = null;
+let frontendPort = 5173; // Default for Vite
+let backendPort = 8001; // Default for FastAPI
 
 /* ---------- helper paths ------------------------------------------------ */
 const ROOT = __dirname;
 const FRONTEND = isDev
-  ? path.join(ROOT, "../frontend")
-  : path.join(process.resourcesPath, "frontend");
+  ? `http://localhost:${frontendPort}`
+  : `file://${path.join(process.resourcesPath, "frontend", "index.html")}`;
 
 const BACKEND_DIR = path.join(ROOT, "../backend");
 const BACKEND_EXE = isDev
-  ? process.platform === "win32"
-    ? path.join(BACKEND_DIR, "venv", "Scripts", "python.exe")
-    : path.join(BACKEND_DIR, "venv", "bin", "python3.10")
+  ? null // handled by Turborepo
   : process.platform === "win32"
     ? path.join(process.resourcesPath, "backend", "backend_main.exe")
     : path.join(process.resourcesPath, "backend", "backend_main");
 
-let waitOn = null;
-if (isDev) {
-  // Use dynamic import so it's not bundled in production
-  import("wait-on")
-    .then((mod) => {
-      waitOn = mod.default || mod;
-    })
-    .catch((err) => {
-      console.error("Failed to import wait-on:", err);
-    });
-}
-
-/* ---------- utilities --------------------------------------------------- */
-async function getPort() {
-  const gp = (await import("get-port")).default;
-  return gp();
-}
-
+/* ---------- kill children safely --------------------------------------- */
 function killChildren() {
-  console.log("Killing child processes...");
+  console.log("Killing backend process...");
   try {
-    if (frontendProc) {
-      console.log("Killing frontend process...");
-      frontendProc.kill("SIGTERM");
-      frontendProc = null;
+    if (backendProc) {
+      backendProc.kill("SIGTERM");
+      backendProc = null;
     }
-  } catch (error) {
-    console.error("Error killing frontend process:", error);
-  }
-
-  try {
-    killBackendProcess(); // Use the killBackendProcess from backendManager
-  } catch (error) {
-    console.error("Error killing backend process:", error);
-  }
-
-  console.log("Child processes killed");
-}
-
-/* ---------- frontend (Vite/TanStack) ----------------------------------- */
-async function launchFrontend() {
-  frontendPort = await getPort();
-  const url = `http://localhost:${frontendPort}`;
-
-  if (isDev) {
-    console.log("🟢 Starting Vite frontend (dev)…");
-    const cmd = process.platform === "win32" ? "npm.cmd" : "npm";
-    frontendProc = spawn(
-      cmd,
-      ["run", "dev", "--", "--port", String(frontendPort)],
-      { cwd: FRONTEND, shell: true, stdio: "inherit" }
-    );
-
-    // Wait for frontend dev server to start
-    const waitOnModule = waitOn || (await import("wait-on")).default;
-    await waitOnModule({ resources: [url], timeout: 20000 });
-    return url;
-  } else {
-    console.log("🔵 Loading frontend dist…");
-    return `file://${path.join(FRONTEND, "index.html")}`;
+  } catch (err) {
+    console.error("Error killing backend:", err);
   }
 }
 
-/* ---------- backend (FastAPI) ------------------------------------------ */
-// Removed the duplicate launchBackend function from here
+/* ---------- wait for backend/frontend in dev --------------------------- */
+async function waitForServices() {
+  console.log("⏳ Waiting for backend and frontend...");
+  await waitOn({
+    resources: [
+      `http://localhost:${frontendPort}`,
+      `http://127.0.0.1:${backendPort}`,
+    ],
+    timeout: 30000,
+    interval: 500,
+    simultaneous: 2,
+  });
+  console.log("✅ Backend and Frontend are up!");
+}
 
-/* ---------- BrowserWindow ---------------------------------------------- */
+/* ---------- create main window ----------------------------------------- */
 async function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     webPreferences: {
-      contextIsolation: true,
       preload: path.join(ROOT, "preload.js"),
+      contextIsolation: true,
     },
   });
 
-  // Add event listeners for debugging
-  mainWindow.webContents.on("did-finish-load", () => {
-    console.log("Main window finished loading");
-  });
-
-  mainWindow.webContents.on(
-    "did-fail-load",
-    (event, errorCode, errorDescription) => {
-      console.error("Main window failed to load:", errorCode, errorDescription);
-    }
-  );
-
-  // Handle the window close event to ensure clean shutdown
-  mainWindow.on("close", (event) => {
-    console.log("Window close event received");
-  });
-
   if (isDev) {
-    const url = await launchFrontend();
-    await launchBackend(isDev, ROOT, url, frontendPort); // Use the launchBackend from backendManager
-    console.log(`Loading frontend in dev mode: ${url}`);
-    mainWindow.loadURL(url);
+    // In dev, Turborepo already runs both
+    try {
+      await waitForServices();
+      await mainWindow.loadURL(FRONTEND);
+      mainWindow.webContents.openDevTools();
+      console.log(`🟢 Loaded frontend from ${FRONTEND}`);
+    } catch (err) {
+      console.error("Failed waiting for dev servers:", err);
+      dialog.showErrorBox("Startup error", String(err));
+      app.quit();
+    }
   } else {
-    const url = await launchFrontend(); // Launch frontend first to get the port
-    await launchBackend(isDev, ROOT, url, frontendPort); // Use the launchBackend from backendManager
-    const frontendPath = path.join(FRONTEND, "index.html");
-    console.log(`Loading frontend in prod mode from: ${frontendPath}`);
-    mainWindow.loadFile(frontendPath);
+    // Production — launch backend binary
+    console.log("🔵 Launching backend binary…");
+    backendProc = spawn(BACKEND_EXE, [], {
+      cwd: BACKEND_DIR,
+      stdio: "inherit",
+    });
+
+    backendProc.on("exit", (code) =>
+      console.log("Backend process exited with code", code)
+    );
+
+    const frontendPath = path.join(
+      process.resourcesPath,
+      "frontend",
+      "index.html"
+    );
+    await mainWindow.loadFile(frontendPath);
+    console.log("✅ Loaded production frontend");
   }
 
   mainWindow.on("closed", () => {
-    console.log("Window closed event received");
     mainWindow = null;
   });
 }
 
 /* ---------- Electron lifecycle ----------------------------------------- */
 app.whenReady().then(async () => {
-  const { default: Store } = await import("electron-store");
-  store = new Store();
-
-  ipcMain.handle("get-ports", () => ({ frontendPort, backendPort }));
-
-  try {
-    await createWindow();
-  } catch (e) {
-    console.error(e);
-    dialog.showErrorBox("Startup error", String(e));
-    app.quit();
-  }
+  await createWindow();
 });
 
-app.on("second-instance", () => {
-  mainWindow?.show();
-  mainWindow?.focus();
-});
-
-// Modified to always quit the app when all windows are closed, regardless of platform
 app.on("window-all-closed", () => {
-  console.log("All windows closed, quitting app...");
   killChildren();
   app.quit();
 });
 
 app.on("before-quit", () => {
-  console.log("App before-quit event received");
   killChildren();
 });
 
-process.on("exit", () => {
-  console.log("Process exit event received");
-  killChildren();
-});
-
-// Add this to handle the window close event properly
 app.on("activate", () => {
-  // On macOS it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
-  console.log("App activate event received");
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
+  if (BrowserWindow.getAllWindows().length === 0) createWindow();
 });
 
-// electron/main.ts
-ipcMain.handle("get-app-info", () => {
-  return {
-    name: app.getName(),
-    version: app.getVersion(),
-    isDev,
-  };
-});
+/* ---------- IPC handlers ----------------------------------------------- */
+ipcMain.handle("get-app-info", () => ({
+  name: app.getName(),
+  version: app.getVersion(),
+  isDev,
+}));
 
-// ✅ Add this
-ipcMain.handle("get-backend-info", () => {
-  return {
-    backendPort,
-    url: `http://localhost:${backendPort}`,
-    status: backendPort ? "running" : "not-started",
-  };
-});
+ipcMain.handle("get-backend-info", () => ({
+  backendPort,
+  url: `http://localhost:${backendPort}`,
+  status: backendPort ? "running" : "not-started",
+}));

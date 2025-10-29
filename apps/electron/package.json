@@ -4,7 +4,7 @@
    "description": "A template for building cross-platform desktop applications with Electron, React, and Python",
    "main": "src/main/main.js",
    "scripts": {
-      "dev": "cross-env FRONTEND_URL=http://localhost:5173 electron .",
+      "dev": "electron .",
       "start": "electron .",
       "build": "electron-builder",
       "build:electron": "electron-builder",
