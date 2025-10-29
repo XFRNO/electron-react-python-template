@@ -4,8 +4,8 @@
    "description": "Python backend for the Electron React Python Template",
    "main": "main.py",
    "scripts": {
-      "dev": "cross-env FRONTEND_PORT=5173 BACKEND_PORT=8001 ./venv/bin/python -m uvicorn main:app --host 127.0.0.1 --port 8001 --reload",
-      "build": "npm run clean && cross-env PYTHONUNBUFFERED=1 ./venv/bin/python -m PyInstaller main.py --onedir --name backend_main --distpath dist --noconfirm --clean",
+      "dev": "cross-env FRONTEND_PORT=5173 BACKEND_PORT=8001 uv run uvicorn main:app --host 127.0.0.1 --port 8001 --reload",
+      "build": "cross-env PYTHONUNBUFFERED=1 uv run pyinstaller main.py --onedir --name backend_main --distpath dist --noconfirm --clean",
       "clean": "rimraf build dist __pycache__ .pyinstaller *.spec"
    },
    "keywords": [],

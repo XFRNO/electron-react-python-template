@@ -1,14 +1,11 @@
-// Type definitions for Electron API
+import { IpcRendererEvent } from "electron";
 
 export interface ElectronAPI {
-  getAppInfo: () => Promise<{
-    name: string;
-    version: string;
-    isDev: boolean;
-  }>;
-  apiCall: (endpoint: string, options?: RequestInit) => Promise<any>;
-  createWebSocket: (endpoint: string) => Promise<WebSocket>;
-  // Add more Electron API methods as needed
+  getAppInfo: () => Promise<any>;
+  apiCall: <T>(url: string, data?: any) => Promise<T>;
+  createWebSocket: () => WebSocket; // Added createWebSocket method
+  on: (channel: string, listener: (event: IpcRendererEvent, ...args: any[]) => void) => void;
+  off: (channel: string, listener: (event: IpcRendererEvent, ...args: any[]) => void) => void;
 }
 
 declare global {
