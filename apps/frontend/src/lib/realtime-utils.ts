@@ -1,4 +1,5 @@
 import { Logger } from "./logger";
+import { PerformanceLogger } from "./performance-logger";
 
 interface WebSocketMessage<T = any> {
   type: string;
@@ -13,13 +14,19 @@ class RealtimeManager {
   private ws: WebSocket | null = null;
   private handlers: Map<string, WebSocketHandler[]> = new Map();
   private isConnected: boolean = false;
-  private reconnectInterval: number = 5000; // 5 seconds
+  private reconnectInterval: number = 1000; // Initial reconnect interval: 1 second
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number = 10;
-  private connectionStatusHandlers: ((status: boolean) => void)[] = []; // New: Connection status handlers
+  private connectionStatusHandlers: ((status: boolean) => void)[] = [];
+  private currentReconnectDelay: number = this.reconnectInterval;
+  private onErrorCallback: ((title: string, description?: string) => void) | null = null;
 
   constructor() {
     this.connect();
+  }
+
+  public setOnErrorCallback(callback: (title: string, description?: string) => void) {
+    this.onErrorCallback = callback;
   }
 
   private connect() {
@@ -27,96 +34,93 @@ class RealtimeManager {
       return;
     }
 
-    Logger.log("Attempting to connect to WebSocket...");
+    Logger.debug("Attempting to connect to WebSocket...");
     this.ws = window.electronAPI.createWebSocket();
 
     this.ws.onopen = () => {
-      Logger.log("WebSocket connected.");
+      Logger.debug("WebSocket connected.");
       this.isConnected = true;
-      this.emitConnectionStatus(true); // Emit connection status
+      this.emitConnectionStatus(true);
       this.reconnectAttempts = 0;
+      this.currentReconnectDelay = this.reconnectInterval;
     };
 
-    this.ws.onmessage = (event) => {
-      try {
-        const message: WebSocketMessage = JSON.parse(event.data);
-        this.handleMessage(message);
-      } catch (error) {
-        Logger.error("Failed to parse WebSocket message:", error);
+    this.ws.onerror = (event) => {
+      Logger.error("WebSocket error:", event);
+      if (this.onErrorCallback) {
+        this.onErrorCallback("WebSocket Error", "Could not connect to the backend. Please check the backend server.");
       }
+      this.isConnected = false;
+      this.emitConnectionStatus(false);
+      this.ws?.close();
     };
 
     this.ws.onclose = (event) => {
+      Logger.debug("WebSocket disconnected:", event);
+      if (!event.wasClean && this.onErrorCallback) {
+        this.onErrorCallback("WebSocket Disconnected", "Connection to the backend was lost. Attempting to reconnect...");
+      }
       this.isConnected = false;
-      this.emitConnectionStatus(false); // Emit connection status
-      Logger.warn("WebSocket disconnected:", event.code, event.reason);
+      this.emitConnectionStatus(false);
       this.scheduleReconnect();
     };
 
-    this.ws.onerror = (error) => {
-      Logger.error("WebSocket error:", error);
-      this.ws?.close(); // Close to trigger onclose and reconnect logic
+    this.ws.onmessage = (event) => {
+      PerformanceLogger.start("websocket_message_handling");
+      Logger.debug("WebSocket message received:", event.data);
+      const message = JSON.parse(event.data);
+      this.handleMessage(message);
+      PerformanceLogger.end("websocket_message_handling");
     };
   }
 
-  private emitConnectionStatus(status: boolean) {
-    this.connectionStatusHandlers.forEach(handler => handler(status));
+  public send(event: string, payload: any) {
+    if (this.ws && this.isConnected) {
+      const message = { event, payload };
+      Logger.debug("Sending WebSocket message:", message);
+      this.ws.send(JSON.stringify(message));
+    } else {
+      Logger.warn("WebSocket not connected. Message not sent:", { event, payload });
+    }
+  }
+
+  public on(event: string, handler: WebSocketHandler) {
+    if (!this.handlers.has(event)) {
+      this.handlers.set(event, []);
+    }
+    this.handlers.get(event)?.push(handler);
+  }
+
+  public off(event: string, handler: WebSocketHandler) {
+    const handlers = this.handlers.get(event);
+    if (handlers) {
+      this.handlers.set(event, handlers.filter((h) => h !== handler));
+    }
   }
 
   public onConnectionStatusChange(handler: (status: boolean) => void) {
     this.connectionStatusHandlers.push(handler);
-    // Immediately inform the new handler of the current status
-    handler(this.isConnected);
   }
 
   public offConnectionStatusChange(handler: (status: boolean) => void) {
-    this.connectionStatusHandlers = this.connectionStatusHandlers.filter(h => h !== handler);
+    this.connectionStatusHandlers = this.connectionStatusHandlers.filter((h) => h !== handler);
+  }
+
+  public getIsConnected(): boolean {
+    return this.isConnected;
+  }
+
+  private emitConnectionStatus(status: boolean) {
+    this.connectionStatusHandlers.forEach((handler) => handler(status));
   }
 
   private scheduleReconnect() {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
-      Logger.log(`Attempting to reconnect in ${this.reconnectInterval / 1000} seconds (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
-      setTimeout(() => this.connect(), this.reconnectInterval);
-    } else {
-      Logger.error("Max reconnect attempts reached. Giving up on WebSocket connection.");
+      this.currentReconnectDelay = Math.min(this.currentReconnectDelay * 2, 30000); // Max 30 seconds
+      Logger.debug(`Attempting to reconnect in ${this.currentReconnectDelay / 1000} seconds...`);
+      setTimeout(() => this.connect(), this.currentReconnectDelay);
     }
-  }
-
-  private handleMessage(message: WebSocketMessage) {
-    const handlers = this.handlers.get(message.type);
-    if (handlers) {
-      handlers.forEach((handler) => handler(message));
-    } else {
-      Logger.warn(`No handlers registered for WebSocket message type: ${message.type}`);
-    }
-  }
-
-  public on(type: string, handler: WebSocketHandler) {
-    if (!this.handlers.has(type)) {
-      this.handlers.set(type, []);
-    }
-    this.handlers.get(type)?.push(handler);
-  }
-
-  public off(type: string, handler: WebSocketHandler) {
-    const handlers = this.handlers.get(type);
-    if (handlers) {
-      this.handlers.set(type, handlers.filter((h) => h !== handler));
-    }
-  }
-
-  public send(type: string, payload: any) {
-    if (this.isConnected && this.ws) {
-      const message: WebSocketMessage = { type, payload };
-      this.ws.send(JSON.stringify(message));
-    } else {
-      Logger.warn("WebSocket not connected. Cannot send message.");
-    }
-  }
-
-  public getIsConnected(): boolean {
-    return this.isConnected;
   }
 }
 
