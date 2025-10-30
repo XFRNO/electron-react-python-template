@@ -68,7 +68,9 @@ async function createWindow() {
       // Turborepo orchestrates the Vite dev server and FastAPI backend.
       // Electron should NOT spawn any servers. It only waits for the dev frontend URL.
       const frontendUrl = await launchFrontend(isDev, ROOT);
+      console.log("XXXXXXXXXXXXX", frontendUrl);
       loadMainWindowContent(frontendUrl);
+      // loadMainWindowContent("http://localhost:5173");
       // No backend launch in dev mode.
     } else {
       // Production mode:

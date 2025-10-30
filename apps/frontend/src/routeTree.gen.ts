@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as MainRouteImport } from './routes/main'
+import { Route as ApiTestRouteImport } from './routes/api-test'
 import { Route as IndexRouteImport } from './routes/index'
 
 const MainRoute = MainRouteImport.update({
   id: '/main',
   path: '/main',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTestRoute = ApiTestRouteImport.update({
+  id: '/api-test',
+  path: '/api-test',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -25,27 +31,31 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api-test': typeof ApiTestRoute
   '/main': typeof MainRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api-test': typeof ApiTestRoute
   '/main': typeof MainRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api-test': typeof ApiTestRoute
   '/main': typeof MainRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/main'
+  fullPaths: '/' | '/api-test' | '/main'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/main'
-  id: '__root__' | '/' | '/main'
+  to: '/' | '/api-test' | '/main'
+  id: '__root__' | '/' | '/api-test' | '/main'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiTestRoute: typeof ApiTestRoute
   MainRoute: typeof MainRoute
 }
 
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/main'
       fullPath: '/main'
       preLoaderRoute: typeof MainRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api-test': {
+      id: '/api-test'
+      path: '/api-test'
+      fullPath: '/api-test'
+      preLoaderRoute: typeof ApiTestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -70,6 +87,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiTestRoute: ApiTestRoute,
   MainRoute: MainRoute,
 }
 export const routeTree = rootRouteImport
