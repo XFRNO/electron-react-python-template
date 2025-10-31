@@ -67,12 +67,6 @@ async function launchFrontend(isDev, rootPath) {
 
   const prodIndex = path.join(FRONTEND, "index.html");
 
-  // In production, wait a bit for files to be fully available
-  if (!isDev) {
-    // Add a small delay to ensure files are fully available
-    await new Promise((resolve) => setTimeout(resolve, 100));
-  }
-
   if (!fs.existsSync(prodIndex)) {
     throw new Error(`❌ Production frontend not found at ${prodIndex}`);
   }

@@ -161,17 +161,7 @@ function setupIpcHandlers(licenseManager, createWindow, isDev) {
     };
   });
 
-  // Create WebSocket connection
-  ipcMain.handle("create-websocket", async (event, endpoint) => {
-    const { getBackendPort } = require("../backend/backendManager");
-    const backendPort = getBackendPort();
-    if (backendPort) {
-      const wsUrl = `ws://localhost:${backendPort}${endpoint}`;
-      return wsUrl;
-    } else {
-      throw new Error("Backend not ready");
-    }
-  });
+
 
   // API call handler
   ipcMain.handle("api-call", async (event, endpoint, options = {}) => {
