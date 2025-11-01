@@ -24,7 +24,7 @@ async function createMainWindow(onContentLoaded) {
     backgroundColor: "#1a1a1a", // Dark background to prevent white flash
     webPreferences: {
       contextIsolation: true,
-      preload: path.join(ROOT, "src/preload.js"),
+      preload: path.join(ROOT, "electron/src/preload.js"),
       webSecurity: true,
       nodeIntegration: false,
       // Optimize for performance

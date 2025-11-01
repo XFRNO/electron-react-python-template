@@ -25,6 +25,7 @@ export function ApiTest() {
   const handleIpcPing = async () => {
     if (window.electron) {
       const result = await window.electron.ping();
+      console.log(result);
       setIpcPingResult(result);
     } else {
       setIpcPingResult("Not in Electron environment");

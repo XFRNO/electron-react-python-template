@@ -251,6 +251,11 @@ function setupIpcHandlers(createWindow, isDev) {
       return { success: false, error: error.message };
     }
   });
+
+  // Ping
+  ipcMain.handle("ping", async () => {
+    return "pong";
+  });
 }
 
 module.exports = { setupIpcHandlers };

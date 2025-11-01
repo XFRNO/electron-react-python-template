@@ -22,7 +22,7 @@ async function createLicenseWindow(rootPath, isDev) {
     licenseWindow = null;
   }
 
-  const preloadPath = path.join(rootPath, "src/preload.js");
+  const preloadPath = path.join(rootPath, "electron/src/preload.js");
 
   // Define window options with icon for development
   const windowOptions = {

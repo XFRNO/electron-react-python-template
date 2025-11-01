@@ -44,18 +44,6 @@ contextBridge.exposeInMainWorld("electronAPI", {
   showItemInFolder: (path) => {
     return ipcRenderer.invoke("show-item-in-folder", path);
   },
-  // Add cookie saving method
-  savePastedCookies: (cookiesContent) => {
-    return ipcRenderer.invoke("save-pasted-cookies", cookiesContent);
-  },
-  // Add cookie clearing method
-  clearCookies: () => {
-    return ipcRenderer.invoke("clear-cookies");
-  },
-  // Add cookie file check method
-  checkCookiesExists: () => {
-    return ipcRenderer.invoke("check-cookies-exists");
-  },
   // Add settings methods
   getSettings: () => {
     return ipcRenderer.invoke("get-settings");
@@ -82,5 +70,9 @@ contextBridge.exposeInMainWorld("electronAPI", {
   // Add openExternal method
   openExternal: (url) => {
     return ipcRenderer.invoke("open-external-url", url);
+  },
+
+  ping: () => {
+    return ipcRenderer.invoke("ping");
   },
 });
