@@ -3,7 +3,7 @@ const https = require("https");
 const {
   createLicenseWindow,
   closeLicenseWindow,
-} = require("../main/windows/licenseWindow");
+} = require("../windows/licenseWindow");
 
 // Product ID for Gumroad - this needs to be your actual product ID from Gumroad
 // For products created after Jan 9, 2023, use the product ID, not permalink

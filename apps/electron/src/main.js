@@ -15,16 +15,8 @@ const {
   checkAndShowMainWindow,
   resetWindowManagerState,
 } = require("./windows/windowManager");
-const {
-  launchFrontend,
-  killFrontendProcess,
-  getFrontendPort,
-} = require("./frontend/frontendManager");
-const {
-  launchBackend,
-  killAllProcesses,
-  getBackendPort,
-} = require("./backend/backendManager");
+const { launchFrontend } = require("./frontend/frontendManager");
+const { launchBackend, killAllProcesses } = require("./backend/backendManager");
 const { setupIpcHandlers } = require("./ipc/ipcHandlers");
 
 // Import license manager functions
@@ -35,7 +27,7 @@ const {
   setLicenseValid,
   showLicenseWindow,
   getIsLicenseValid,
-} = require("../lib/licenseManager");
+} = require("./lib/licenseManager");
 
 // Constants
 const isDev = !app.isPackaged;
@@ -94,9 +86,11 @@ async function createWindow() {
  */
 function setupGlobalShortcuts() {
   // Disable reload and dev tools shortcuts
-  //   globalShortcut.register("CommandOrControl+R", () => {
-  // Prevent reload
-  //   });
+  if (!isDev) {
+    globalShortcut.register("CommandOrControl+R", () => {
+      // Prevent reload
+    });
+  }
 
   globalShortcut.register("CommandOrControl+Shift+R", () => {
     // Prevent hard reload

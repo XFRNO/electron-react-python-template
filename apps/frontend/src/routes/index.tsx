@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({
   component: Home,
@@ -27,6 +28,10 @@ function Home() {
           <h2 className="mb-2 text-xl font-semibold">Desktop</h2>
           <p>Electron for cross-platform desktop integration</p>
         </div>
+
+        <Link to="/api-test" className="p-6 rounded-lg shadow-md bg-card">
+          <Button>Test API</Button>
+        </Link>
       </div>
     </div>
   );
