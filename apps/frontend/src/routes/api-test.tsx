@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { apiFetch } from "../lib/api-fetch";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState } from "react";
@@ -19,7 +18,7 @@ export function ApiTest() {
     error: apiPingError,
   } = useQuery({
     queryKey: ["apiPing"],
-    queryFn: () => apiFetch("/ping"),
+    queryFn: () => handleIpcPing(),
   });
 
   const handleIpcPing = async () => {
@@ -30,6 +29,13 @@ export function ApiTest() {
     } else {
       setIpcPingResult("Not in Electron environment");
     }
+  };
+
+  const handleBackendPing = async () => {
+    const result = await fetch("http://127.0.0.1:8001/api/ping");
+    const data = await result.json();
+    console.log(data);
+    setIpcPingResult(data.message);
   };
 
   return (
@@ -58,6 +64,10 @@ export function ApiTest() {
             Send IPC Ping
           </Button>
           {ipcPingResult && <p>IPC Response: {ipcPingResult}</p>}
+          <Button onClick={handleBackendPing} className="mb-2">
+            Send Backend Ping
+          </Button>
+          {ipcPingResult && <p>Backend Response: {ipcPingResult}</p>}
         </CardContent>
       </Card>
     </div>

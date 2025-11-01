@@ -1,25 +1,12 @@
 import { createRootRoute, Link, Outlet } from "@tanstack/react-router";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
-import { useEffect, useState } from "react";
-import { useErrorToast } from "@/lib/error-utils";
-import { InteractionLogger } from "@/lib/interaction-logger";
 
 export const Route = createRootRoute({
   component: RootComponent,
 });
 
 function RootComponent() {
-  const { showErrorToast } = useErrorToast();
-
-  useEffect(() => {
-    // Log page view
-    InteractionLogger.pageView("RootComponent");
-
-    return () => {
-    };
-  }, [showErrorToast]);
-
   return (
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <div className="min-h-screen bg-background text-foreground">

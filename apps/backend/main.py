@@ -17,7 +17,8 @@ frontend_port = os.environ.get("FRONTEND_PORT")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[f"http://localhost:{frontend_port}", f"http://127.0.0.1:{frontend_port}"],
+   #  allow_origins=[f"http://localhost:{frontend_port}", f"http://127.0.0.1:{frontend_port}"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -33,6 +34,13 @@ def read_root():
 def read_hello():
     logger.info("Hello endpoint accessed")
     return {"message": "Hello from the Python backend! This is a test API endpoint."}
+
+@app.get("/api/ping")
+def read_ping():
+    logger.info("Ping endpoint accessed")
+    return {"message": "pong"}
+
+
 
 @app.get("/api/status")
 def read_status():
