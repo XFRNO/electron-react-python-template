@@ -5,7 +5,13 @@ description = "Python backend for the Electron React Python Template"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "fastapi==0.116.1",
-    "python-multipart==0.0.20",
-    "uvicorn[standard]==0.35.0",
+    "fastapi",
+    "uvicorn[standard]",
+    "pydantic-settings",
+    "httpx",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
 ]
