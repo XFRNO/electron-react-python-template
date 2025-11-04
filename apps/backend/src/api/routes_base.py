@@ -1,7 +1,8 @@
 from fastapi import APIRouter
 
+
+# Base router
 router = APIRouter()
 
-@router.get("/health")
-def health_check():
-    return {"status": "ok"}
+# Include all routers
+router.include_router(health.router)

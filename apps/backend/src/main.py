@@ -1,40 +1,40 @@
-from fastapi import FastAPI
-from src.core.config import settings
-from src.api import routes_base
-from src.utils.logger import logger
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from src.core.config import settings
+from src.core.cors import setup_cors
 from src.api import routes_base
 from src.utils.logger import logger
 
-app = FastAPI(
-    title=settings.APP_NAME,
-    debug=settings.DEBUG,
-)
 
-
+# Define lifespan context manager
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Starting up...")
+    # Startup event
+    await startup_event()
     yield
-    logger.info("Shutting down...")
+    # Shutdown event
+    await shutdown_event()
 
+
+# Startup event function
+async def startup_event():
+    logger.info("🚀 Starting up...")
+
+
+# Shutdown event function
+async def shutdown_event():
+    logger.info("🛑 Shutting down...")
+
+
+# Create FastAPI app
 app = FastAPI(
     title=settings.APP_NAME,
     debug=settings.DEBUG,
     lifespan=lifespan,
 )
 
-app.include_router(routes_base.router)
+# Setup CORS and middlewares
+setup_cors(app)
 
-
-async def startup_event():
-    logger.info("Starting up...")
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    logger.info("Shutting down...")
-
+# Include routes
 app.include_router(routes_base.router)
