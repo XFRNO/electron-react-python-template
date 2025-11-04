@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useState } from "react";
 
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -10,7 +9,14 @@ export const Route = createFileRoute("/api-test")({
 });
 
 export function ApiTest() {
-  const [ipcPingResult, setIpcPingResult] = useState<string | null>(null);
+  const {
+    data: ipcPingData,
+    isLoading: ipcPingLoading,
+    error: ipcPingError,
+  } = useQuery({
+    queryKey: ["ipcPing"],
+    queryFn: () => handleIpcPing(),
+  });
 
   const {
     data: apiPingData,
@@ -18,24 +24,23 @@ export function ApiTest() {
     error: apiPingError,
   } = useQuery({
     queryKey: ["apiPing"],
-    queryFn: () => handleIpcPing(),
+    queryFn: () => handleApiPing(),
   });
 
   const handleIpcPing = async () => {
+    console.log("first");
     if (window.electron) {
+      console.log("2");
       const result = await window.electron.ping();
       console.log(result);
-      setIpcPingResult(result);
-    } else {
-      setIpcPingResult("Not in Electron environment");
+      return result;
     }
   };
 
-  const handleBackendPing = async () => {
-    const result = await fetch("http://127.0.0.1:8001/api/ping");
+  const handleApiPing = async () => {
+    const result = await fetch("http://127.0.0.1:8001/api/health");
     const data = await result.json();
-    console.log(data);
-    setIpcPingResult(data.message);
+    return data;
   };
 
   return (
@@ -63,11 +68,17 @@ export function ApiTest() {
           <Button onClick={handleIpcPing} className="mb-2">
             Send IPC Ping
           </Button>
-          {ipcPingResult && <p>IPC Response: {ipcPingResult}</p>}
-          <Button onClick={handleBackendPing} className="mb-2">
+          {ipcPingLoading && <p>Loading IPC ping...</p>}
+          {ipcPingError && (
+            <p className="text-red-500">Error: {ipcPingError.message}</p>
+          )}
+          {ipcPingData && <p>IPC Response: {ipcPingData}</p>}
+          <Button onClick={handleApiPing} className="mb-2">
             Send Backend Ping
           </Button>
-          {ipcPingResult && <p>Backend Response: {ipcPingResult}</p>}
+          {apiPingData && (
+            <p>Backend Response: {JSON.stringify(apiPingData)}</p>
+          )}
         </CardContent>
       </Card>
     </div>

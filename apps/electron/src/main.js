@@ -17,7 +17,7 @@ const {
 } = require("./windows/windowManager");
 const { launchFrontend } = require("./frontend/frontendManager");
 const { launchBackend, killAllProcesses } = require("./backend/backendManager");
-const { setupIpcHandlers } = require("./ipc/ipcHandlers");
+const { setupIpcHandlers } = require("./ipc");
 
 // Import license manager functions
 const {

@@ -36,5 +36,5 @@ app = FastAPI(
 # Setup CORS and middlewares
 setup_cors(app)
 
-# Include routes
-app.include_router(routes_base.router)
+# Include routes with /api prefix
+app.include_router(routes_base.router, prefix="/api")
