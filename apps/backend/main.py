@@ -17,7 +17,7 @@ frontend_port = os.environ.get("FRONTEND_PORT")
 
 app.add_middleware(
     CORSMiddleware,
-   #  allow_origins=[f"http://localhost:{frontend_port}", f"http://127.0.0.1:{frontend_port}"],
+    #  allow_origins=[f"http://localhost:{frontend_port}", f"http://127.0.0.1:{frontend_port}"],
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
@@ -30,16 +30,17 @@ def read_root():
     logger.info("Root endpoint accessed")
     return {"message": "Hello from Python FastAPI backend!"}
 
+
 @app.get("/api/hello")
 def read_hello():
     logger.info("Hello endpoint accessed")
     return {"message": "Hello from the Python backend! This is a test API endpoint."}
 
+
 @app.get("/api/ping")
 def read_ping():
     logger.info("Ping endpoint accessed")
     return {"message": "pong"}
-
 
 
 @app.get("/api/status")
@@ -51,6 +52,7 @@ def read_status():
         "version": "1.0.0"
     }
 
+
 def find_free_port():
     """Find a free port to bind the server to"""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -58,6 +60,7 @@ def find_free_port():
         s.listen(1)
         port = s.getsockname()[1]
     return port
+
 
 if __name__ == "__main__":
     # Get port from environment variable (Electron sets BACKEND_PORT)
@@ -67,7 +70,8 @@ if __name__ == "__main__":
             port = int(port_env)
             logger.info(f"Using port from env variable: {port}")
         except ValueError:
-            logger.warning(f"Invalid port value: {port_env}, finding free port")
+            logger.warning(
+                f"Invalid port value: {port_env}, finding free port")
             port = find_free_port()
     else:
         logger.info("Finding free port")
