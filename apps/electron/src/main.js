@@ -40,6 +40,7 @@ const SHOW_SPLASH_SCREEN = false;
 let store = null;
 let licenseManager = null;
 let appStartTime = null;
+let backendPort = null;
 
 /**
  * Creates the main application window
@@ -68,8 +69,16 @@ async function createWindow() {
       const frontendPath = await launchFrontend(isDev, ROOT);
       loadMainWindowContent(frontendPath);
 
+      // Get a dynamic port for the backend
+      const { default: getPort } = await import("get-port");
+      backendPort = await getPort({ port: getPort.makeRange(5000, 5100) });
+      Logger.log(`Allocated backend port: ${backendPort}`);
+      if (store) {
+        store.set("backendPort", backendPort);
+      }
+
       // Start backend in parallel (production only)
-      launchBackend(isDev, ROOT).catch((err) => {
+      launchBackend(isDev, ROOT, backendPort).catch((err) => {
         Logger.error("Backend startup failed:", err);
       });
     }

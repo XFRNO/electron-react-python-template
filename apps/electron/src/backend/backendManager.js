@@ -19,15 +19,6 @@ let backendReadyCallbacks = [];
 let pingAttempts = 0;
 
 /**
- * Gets an available port
- * @returns {Promise<number>} Available port number
- */
-async function getPort() {
-  const gp = (await import("get-port")).default;
-  return gp();
-}
-
-/**
  * Checks if the backend is ready by pinging the /docs endpoint
  * @param {number} port - The backend port to check
  * @returns {Promise<boolean>} Whether the backend is ready
@@ -154,8 +145,14 @@ async function showError(errorMsg) {
  * @param {number} frontendPortParam - Frontend port number
  * @returns {Promise<void>}
  */
-async function launchBackend(isDev, rootPath, frontendURL, frontendPortParam) {
-  console.time('Backend Launch');
+async function launchBackend(
+  isDev,
+  rootPath,
+  dynamicBackendPort,
+  frontendURL,
+  frontendPortParam
+) {
+  console.time("Backend Launch");
   console.log(
     `Starting backend launch (${isDev ? "development" : "production"})`
   );
@@ -164,12 +161,11 @@ async function launchBackend(isDev, rootPath, frontendURL, frontendPortParam) {
   isBackendReady = false;
   backendReadyCallbacks = [];
 
-  console.time('Get Port');
-  backendPort = await getPort();
-  console.timeEnd('Get Port');
+  // Use the dynamic port passed from main.js
+  backendPort = dynamicBackendPort;
 
   let BACKEND_EXE;
-  console.time('Backend Executable Path Determination');
+  console.time("Backend Executable Path Determination");
   if (isDev) {
     const BACKEND_DIR = path.join(rootPath, "../backend");
     BACKEND_EXE =

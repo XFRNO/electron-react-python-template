@@ -1,5 +1,4 @@
 const { ipcMain } = require("electron");
-const { Logger } = require("../utils/logger");
 const { setupLicenseHandlers } = require("./license");
 const { setupApiHandlers } = require("./api");
 const { setupSystemHandlers } = require("./system");
@@ -13,16 +12,16 @@ const { setupSettingsHandlers } = require("./settings");
 function setupIpcHandlers(createWindow, isDev) {
   // Setup license handlers
   setupLicenseHandlers(createWindow);
-  
+
   // Setup API handlers
   setupApiHandlers();
-  
+
   // Setup system handlers
   setupSystemHandlers(isDev, createWindow);
-  
+
   // Setup settings handlers
   setupSettingsHandlers();
-  
+
   // Ping handler
   ipcMain.handle("ping", async () => {
     return "pong";

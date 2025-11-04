@@ -10,9 +10,14 @@ function setupApiHandlers() {
     // Import here to avoid circular dependency
     const { getBackendPort } = require("../backend/backendManager");
     const { getFrontendPort } = require("../frontend/frontendManager");
+
+    const Store = require("electron-store");
+    const store = new Store();
+    const backendPort = store.get("backendPort");
+
     return {
       frontendPort: getFrontendPort(),
-      backendPort: getBackendPort(),
+      backendPort: backendPort || getBackendPort(), // Fallback to original method
     };
   });
 
