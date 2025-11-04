@@ -28,9 +28,7 @@ export function ApiTest() {
   });
 
   const handleIpcPing = async () => {
-    console.log("first");
     if (window.electron) {
-      console.log("2");
       const result = await window.electron.ping();
       console.log(result);
       return result;

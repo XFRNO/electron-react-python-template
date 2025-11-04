@@ -22,7 +22,7 @@ function setupIpcHandlers(createWindow, isDev) {
   
   // Setup settings handlers
   setupSettingsHandlers();
-
+  
   // Ping handler
   ipcMain.handle("ping", async () => {
     return "pong";
