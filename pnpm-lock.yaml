@@ -12,6 +12,9 @@ importers:
         specifier: ^7.1.0
         version: 7.1.0
     devDependencies:
+      '@types/wait-on':
+        specifier: ^5.3.4
+        version: 5.3.4
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
@@ -2035,6 +2038,9 @@ packages:
 
   '@types/verror@1.10.11':
     resolution: {integrity: sha512-RlDm9K7+o5stv0Co8i8ZRGxDbrTxhJtgjqjFyVh/tXQyl/rYtTKlnTvZ88oSTeYREWurwx20Js4kTuKCsFkUtg==}
+
+  '@types/wait-on@5.3.4':
+    resolution: {integrity: sha512-EBsPjFMrFlMbbUFf9D1Fp+PAB2TwmUn7a3YtHyD9RLuTIk1jDd8SxXVAoez2Ciy+8Jsceo2MYEYZzJ/DvorOKw==}
 
   '@types/yauzl@2.10.3':
     resolution: {integrity: sha512-oJoftv0LSuaDZE3Le4DbKX+KS9G36NzOeSap90UIK0yMA/NhKJhqlSGtNDORNRaIbQfzjXDrQa0ytJ6mNRGz/Q==}
@@ -6333,6 +6339,10 @@ snapshots:
 
   '@types/verror@1.10.11':
     optional: true
+
+  '@types/wait-on@5.3.4':
+    dependencies:
+      '@types/node': 24.9.2
 
   '@types/yauzl@2.10.3':
     dependencies:

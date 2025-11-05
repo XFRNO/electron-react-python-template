@@ -10,14 +10,10 @@ const {
   loadMainWindowContent,
 } = require("./windows/mainWindow");
 const { checkAndShowMainWindow } = require("./windows/windowManager");
-const { launchFrontend } = require("./lib/frontendManager");
-const { launchBackend, killAllProcesses } = require("./lib/backendManager");
+const { frontendManager } = require("./lib/frontendManager");
+const { backendManager } = require("./lib/backendManager");
+const { licenseManager } = require("./lib/licenseManager");
 import { setupIpcHandlers } from "./ipc/index.ts";
-const {
-  initLicenseManager,
-  onAppLaunch,
-  handleAppActivation,
-} = require("./lib/licenseManager");
 const { getPort } = require("./utils/getPort");
 const { default: setupGlobalShortcuts } = require("./lib/setupGlobalShortcuts");
 
@@ -30,7 +26,6 @@ const SHOW_SPLASH_SCREEN = false;
 
 // Global state
 let store = null;
-let licenseManager = null;
 let appStartTime = null;
 let backendPort = null;
 
@@ -52,13 +47,14 @@ async function createWindow() {
       // Development mode:
       // Turborepo orchestrates the Vite dev server and FastAPI backend.
       // Electron should NOT spawn any servers. It only waits for the dev frontend URL.
-      const frontendUrl = await launchFrontend(isDev, ROOT);
+      const frontendUrl = await frontendManager.launch(isDev, ROOT);
       loadMainWindowContent(frontendUrl);
       // No backend launch in dev mode.
     } else {
       // Production mode:
       // Load built frontend and start the packaged backend executable.
-      const frontendPath = await launchFrontend(isDev, ROOT);
+      const frontendPath = await frontendManager.launch(isDev, ROOT);
+      const frontendPort = frontendManager.getPort();
       loadMainWindowContent(frontendPath);
 
       // Get a dynamic port for the backend
@@ -69,7 +65,7 @@ async function createWindow() {
       }
 
       // Start backend in parallel (production only)
-      launchBackend(isDev, ROOT, backendPort).catch((err) => {
+      backendManager.start(isDev, ROOT, backendPort, null, frontendPort).catch((err) => {
         Logger.error("Backend startup failed:", err);
       });
     }
@@ -103,16 +99,14 @@ app.whenReady().then(async () => {
     store = new Store();
 
     // Initialize LicenseManager
-    initLicenseManager(store, isDev, ROOT);
-    // Store reference for later use
-    licenseManager = { onAppLaunch };
+    licenseManager.init(store, isDev, ROOT);
 
     // Setup IPC handlers
-    setupIpcHandlers(licenseManager, createWindow, isDev);
+    setupIpcHandlers(createWindow, isDev);
 
     // Start the app launch sequence
     Logger.log("Starting app launch sequence");
-    await onAppLaunch(createWindow);
+    await licenseManager.onAppLaunch(createWindow);
 
     const elapsed = Date.now() - appStartTime;
     Logger.log(`App launch sequence completed (took ${elapsed}ms)`);
@@ -149,13 +143,15 @@ app.on("second-instance", () => {
 app.on("window-all-closed", () => {
   const elapsed = Date.now() - appStartTime;
   Logger.log(`App closing (ran for ${elapsed}ms)`);
-  killAllProcesses();
+  backendManager.stop();
+  frontendManager.kill();
   app.quit();
 });
 
 // Handle before quit
 app.on("before-quit", () => {
-  killAllProcesses();
+  backendManager.stop();
+  frontendManager.kill();
 
   // Unregister all shortcuts
   globalShortcut.unregisterAll();
@@ -163,10 +159,11 @@ app.on("before-quit", () => {
 
 // Handle process exit
 process.on("exit", () => {
-  killAllProcesses();
+  backendManager.stop();
+  frontendManager.kill();
 });
 
 // Handle app activation (macOS)
-app.on("activate", handleAppActivation);
+app.on("activate", () => licenseManager.handleAppActivation());
 
 Logger.log("Main process initialized");

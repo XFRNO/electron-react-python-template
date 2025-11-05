@@ -1,7 +1,7 @@
 import { ipcMain } from "electron";
 import { Logger } from "../utils/logger";
-import { getBackendPort } from "../lib/backendManager.js";
-import { getFrontendPort } from "../lib/frontendManager.js";
+import { backendManager } from "../lib/backendManager";
+import { frontendManager } from "../lib/frontendManager";
 import Store from "electron-store";
 
 /**
@@ -15,14 +15,14 @@ export function setupApiHandlers(): void {
     const backendPort = store.get("backendPort");
 
     return {
-      frontendPort: getFrontendPort(),
-      backendPort: backendPort || getBackendPort(), // Fallback to original method
+      frontendPort: frontendManager.getPort(),
+      backendPort: backendPort || backendManager.getPort(), // Fallback to original method
     };
   });
 
   // Get backend info
   ipcMain.handle("get-backend-info", () => {
-    const backendPort = getBackendPort();
+    const backendPort = backendManager.getPort();
     return {
       backendPort,
       url: `http://localhost:${backendPort}`,
@@ -35,7 +35,7 @@ export function setupApiHandlers(): void {
     "api-call",
     async (event, endpoint: string, options: RequestInit = {}) => {
       try {
-        const backendPort = getBackendPort();
+        const backendPort = backendManager.getPort();
         if (!backendPort) {
           throw new Error("Backend not ready");
         }
