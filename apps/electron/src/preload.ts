@@ -55,7 +55,7 @@ contextBridge.exposeInMainWorld("electron", {
     return ipcRenderer.invoke("update-settings", settings);
   },
   // Add license error listener
-  onLicenseError: (callback: (errorTitle: string, errorMessage: string) => void) => (): void => {
+  onLicenseError: (callback: (errorTitle: string, errorMessage: string) => void) => {
     // Use ipcRenderer.on for receiving events from main process
     const handler = (event: Electron.IpcRendererEvent, errorTitle: string, errorMessage: string) => {
       callback(errorTitle, errorMessage);

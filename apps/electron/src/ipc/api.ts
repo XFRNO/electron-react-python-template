@@ -2,14 +2,14 @@ import { ipcMain } from "electron";
 import { Logger } from "../utils/logger";
 import { backendManager } from "../lib/backendManager";
 import { frontendManager } from "../lib/frontendManager";
-import Store from "electron-store";
+import { storeManager } from "../utils/storeManager"; // Import storeManager
 
 /**
  * Sets up API-related IPC handlers
  */
 export function setupApiHandlers(): void {
   // Use the global storeManager instance
-  // const store = new Store(); // Removed direct electron-store instantiation
+
 
   // Get ports information
   ipcMain.handle("get-ports", () => {

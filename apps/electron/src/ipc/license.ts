@@ -1,7 +1,7 @@
 import { ipcMain } from "electron";
 import { Logger } from "../utils/logger";
 import { licenseManager } from "../lib/licenseManager";
-import Store from "electron-store";
+import { storeManager } from "../utils/storeManager";
 
 /**
  * Sets up license-related IPC handlers

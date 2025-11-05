@@ -1,7 +1,7 @@
 import { ipcMain, shell, dialog, BrowserWindow, app } from "electron";
 import { Logger } from "../utils/logger";
 import { resetWindowManagerState } from "../windows/windowManager";
-import { setLicenseValid } from "../lib/licenseManager";
+import { licenseManager } from "../lib/licenseManager"; // Changed import to licenseManager
 
 /**
  * Sets up system-related IPC handlers
@@ -10,7 +10,7 @@ import { setLicenseValid } from "../lib/licenseManager";
  */
 export function setupSystemHandlers(
   isDev: boolean,
-  createWindow: () => void
+  createWindow: () => Promise<BrowserWindow> // Changed return type to Promise<BrowserWindow>
 ): void {
   // Restart app
   ipcMain.handle("restart-app", async () => {
@@ -21,15 +21,15 @@ export function setupSystemHandlers(
       });
 
       // Reset license manager state
-      setLicenseValid(false);
+      await licenseManager.clearLicense(); // Changed to call clearLicense method
 
       // Reset window manager state
       resetWindowManagerState();
 
       // Re-launch the app flow
-      const { onAppLaunch } = await import("../lib/licenseManager.js");
+      // Removed invalid dynamic import for onAppLaunch
       setImmediate(() => {
-        onAppLaunch(createWindow);
+        licenseManager.onAppLaunch(createWindow); // Call onAppLaunch via existing licenseManager instance
       });
 
       return { success: true };

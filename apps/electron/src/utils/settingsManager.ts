@@ -3,7 +3,7 @@ import path from "path";
 import { Logger } from "./logger";
 import { storeManager } from "./storeManager"; // Import the new storeManager
 
-interface Settings {
+export interface Settings {
   default_output_path: string;
   default_format: string;
   default_quality: string;

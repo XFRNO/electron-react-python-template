@@ -3,8 +3,8 @@
 import { app } from "electron";
 import fs from "fs";
 import path from "path";
-import { Logger } from "./logger.js";
 import ElectronStore, { type Schema } from "electron-store";
+import { Logger } from "./logger";
 
 /**
  * Type definition for persistent store data.

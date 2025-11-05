@@ -1,4 +1,4 @@
-import { ipcMain } from "electron";
+import { BrowserWindow, ipcMain } from "electron";
 import { setupLicenseHandlers } from "./license";
 import { setupApiHandlers } from "./api";
 import { setupSystemHandlers } from "./system";
@@ -10,12 +10,12 @@ import { setupSettingsHandlers } from "./settings";
  * @param isDev - Development mode flag
  */
 export function setupIpcHandlers(
-  createWindow: () => void,
+  createWindow: () => Promise<BrowserWindow>,
   isDev: boolean
 ): void {
   // Setup license handlers
   setupLicenseHandlers(async () => {
-    createWindow();
+    await createWindow();
   });
 
   // Setup API handlers

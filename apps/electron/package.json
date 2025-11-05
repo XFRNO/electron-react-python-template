@@ -4,7 +4,7 @@
    "description": "A template for building cross-platform desktop applications with Electron, React, and Python",
    "main": "dist/main.js",
    "scripts": {
-      "dev": "cross-env NODE_ENV=development ts-node src/main.ts",
+      "dev": "tsc -p tsconfig.json && cross-env NODE_ENV=development electron .",
       "start": "electron .",
       "build": "tsc -p tsconfig.json && electron-builder",
       "build:ts": "tsc -p tsconfig.json",
@@ -85,7 +85,7 @@
    "homepage": "https://github.com/XFRNO/electron-react-python-template#readme",
    "dependencies": {
       "electron-is-dev": "^2.0.0",
-      "electron-store": "^10.1.0",
+      "electron-store": "^8.1.0",
       "get-port": "^7.1.0"
    },
    "devDependencies": {

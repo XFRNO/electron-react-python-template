@@ -7,7 +7,6 @@ import { createSplashWindow } from "../windows/splashWindow";
 import { resetWindowManagerState } from "../windows/windowManager";
 import { processManager } from "./processManager";
 import Store from "electron-store";
-import { TStoreData } from "../types";
 import { StoreManager } from "../utils/storeManager";
 
 const GUMROAD_PRODUCT_ID = "tbU32GxrR5IQl9j7KXzqRg==";

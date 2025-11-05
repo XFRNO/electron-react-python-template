@@ -1,6 +1,5 @@
 import { app, globalShortcut, BrowserWindow, dialog } from "electron";
 import path from "path";
-import { Logger } from "./utils/logger";
 import { createSplashWindow, showSplashError } from "./windows/splashWindow";
 import { createMainWindow, loadMainWindowContent } from "./windows/mainWindow";
 import { checkAndShowMainWindow } from "./windows/windowManager";
@@ -11,8 +10,9 @@ import { licenseManager } from "./lib/licenseManager";
 import { processManager } from "./lib/processManager";
 import { setupIpcHandlers } from "./ipc/index";
 import setupGlobalShortcuts from "./lib/setupGlobalShortcuts";
-import getPort from "get-port";
+// Removed static import of get-port
 import { storeManager } from "./utils/storeManager";
+import { Logger } from "./utils/logger";
 
 // Constants
 const isDev = !app.isPackaged;
@@ -23,7 +23,7 @@ const SHOW_SPLASH_SCREEN = false;
 
 // Global state
 let appStartTime: number | null = null;
-let backendPort: number | null = null;
+let backendPort: number | undefined = undefined;
 
 /**
  * Creates the main application window
@@ -54,6 +54,7 @@ async function createWindow(): Promise<BrowserWindow> {
       loadMainWindowContent(frontendPath, isDev);
 
       // Get a dynamic port for the backend
+      const getPort = (await import("get-port")).default; // Dynamically import get-port
       backendPort = await getPort();
       Logger.log(`Allocated backend port: ${backendPort}`);
       storeManager.set("backendPort", backendPort);
@@ -104,8 +105,9 @@ app.whenReady().then(async () => {
     await licenseManager.onAppLaunch(createWindow);
 
     // Get backend port from store or assign a new one
-    backendPort = storeManager.get("backendPort") ?? null;
-    if (backendPort === null || typeof backendPort !== "number") {
+    backendPort = storeManager.get("backendPort");
+    if (backendPort === undefined || typeof backendPort !== "number") {
+      const getPort = (await import("get-port")).default; // Dynamically import get-port
       backendPort = await getPort({ port: 8000 });
       storeManager.set("backendPort", backendPort);
     }

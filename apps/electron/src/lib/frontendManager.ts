@@ -3,7 +3,7 @@ import fs from "fs";
 import { Logger } from "../utils/logger";
 import { waitForResource } from "../utils/waitOnResource";
 import { processManager } from "./processManager";
-import getPort from "get-port";
+// Removed static import of get-port
 
 class FrontendManager {
   private port: number | null = null;
@@ -22,6 +22,7 @@ class FrontendManager {
 
     // ---- Development mode ----
     if (isDev) {
+      const getPort = (await import("get-port")).default; // Dynamically import get-port
       const envPort = process.env.FRONTEND_PORT
         ? Number(process.env.FRONTEND_PORT)
         : await getPort();
