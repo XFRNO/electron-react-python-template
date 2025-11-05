@@ -1,6 +1,6 @@
 import { ipcMain } from "electron";
 import { Logger } from "../utils/logger";
-import { settingsManager } from "../utils/settingsManager.js";
+import { settingsManager } from "../utils/settingsManager";
 
 /**
  * Sets up settings-related IPC handlers

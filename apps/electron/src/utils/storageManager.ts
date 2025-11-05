@@ -1,14 +1,16 @@
-const { app } = require("electron");
-const fs = require("fs");
-const path = require("path");
-const { Logger } = require("./logger");
+import { app } from "electron";
+import fs from "fs";
+import path from "path";
+import { Logger } from "./logger";
 
 class StorageManager {
-  constructor() {
-    // Get the user data directory from Electron
-    this.userDataPath = app.getPath("userData");
+  public readonly userDataPath: string;
+  public readonly cookiesPath: string;
+  public readonly downloadsDbPath: string;
+  public readonly logsPath: string;
 
-    // Define file paths - use user-downloaded-cookies.txt instead of cookies.txt
+  constructor() {
+    this.userDataPath = app.getPath("userData");
     this.cookiesPath = path.join(
       this.userDataPath,
       "user-downloaded-cookies.txt"
@@ -16,10 +18,8 @@ class StorageManager {
     this.downloadsDbPath = path.join(this.userDataPath, "downloads.db");
     this.logsPath = path.join(this.userDataPath, "logs");
 
-    // Ensure directories exist
     this.ensureDirectories();
 
-    // Log the resolved paths
     Logger.log(`Storage paths initialized:`);
     Logger.log(`  User data directory: ${this.userDataPath}`);
     Logger.log(`  Cookies path: ${this.cookiesPath}`);
@@ -27,57 +27,38 @@ class StorageManager {
     Logger.log(`  Logs directory: ${this.logsPath}`);
   }
 
-  /**
-   * Ensures all required directories exist
-   */
-  ensureDirectories() {
+  private ensureDirectories(): void {
     try {
-      // Create user data directory if it doesn't exist (should already exist)
       if (!fs.existsSync(this.userDataPath)) {
         fs.mkdirSync(this.userDataPath, { recursive: true });
         Logger.log(`Created user data directory: ${this.userDataPath}`);
       }
 
-      // Create logs directory if it doesn't exist
       if (!fs.existsSync(this.logsPath)) {
         fs.mkdirSync(this.logsPath, { recursive: true });
         Logger.log(`Created logs directory: ${this.logsPath}`);
       }
     } catch (error) {
-      Logger.error(`Error ensuring directories exist: ${error.message}`);
+      Logger.error(
+        `Error ensuring directories exist: ${(error as Error).message}`
+      );
       throw error;
     }
   }
 
-  /**
-   * Returns the full path to the cookies file
-   * @returns {string} Full path to user-downloaded-cookies.txt
-   */
-  getCookiesPath() {
+  public getCookiesPath(): string {
     return this.cookiesPath;
   }
 
-  /**
-   * Returns the full path to the downloads database
-   * @returns {string} Full path to downloads.db
-   */
-  getDownloadsDbPath() {
+  public getDownloadsDbPath(): string {
     return this.downloadsDbPath;
   }
 
-  /**
-   * Returns the full path to the logs directory
-   * @returns {string} Full path to logs directory
-   */
-  getLogsPath() {
+  public getLogsPath(): string {
     return this.logsPath;
   }
 
-  /**
-   * Returns all storage paths
-   * @returns {Object} Object containing all storage paths
-   */
-  getAllPaths() {
+  public getAllPaths(): { [key: string]: string } {
     return {
       userDataPath: this.userDataPath,
       cookiesPath: this.cookiesPath,
@@ -87,9 +68,4 @@ class StorageManager {
   }
 }
 
-// Create a singleton instance
-const storageManager = new StorageManager();
-
-module.exports = {
-  storageManager,
-};
+export const storageManager = new StorageManager();
