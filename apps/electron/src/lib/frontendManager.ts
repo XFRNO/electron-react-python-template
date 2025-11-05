@@ -3,7 +3,7 @@ import fs from "fs";
 import { Logger } from "../utils/logger";
 import { waitForResource } from "../utils/waitOnResource";
 import { processManager } from "./processManager";
-// Removed static import of get-port
+import { getAvailablePort } from "../utils/portUtils";
 
 class FrontendManager {
   private port: number | null = null;
@@ -22,22 +22,19 @@ class FrontendManager {
 
     // ---- Development mode ----
     if (isDev) {
-      const getPort = (await import("get-port")).default; // Dynamically import get-port
-      const envPort = process.env.FRONTEND_PORT
-        ? Number(process.env.FRONTEND_PORT)
-        : await getPort();
-      const url = `http://localhost:${envPort}`;
-      this.port = envPort;
+      const frontendPort = await getAvailablePort();
+      const url = `http://localhost:${frontendPort}`;
+      this.port = frontendPort;
 
       // Spawn Vite dev server
-      Logger.log(`Starting Vite dev server on port ${envPort}...`);
+      Logger.log(`Starting Vite dev server on port ${frontendPort}...`);
       this.process = processManager.spawn(
         "frontend-dev-server",
         "npm",
         ["run", "dev"],
         {
           cwd: frontendDir,
-          env: { ...process.env, PORT: envPort.toString() },
+          env: { ...process.env, PORT: frontendPort.toString() },
         }
       );
 
