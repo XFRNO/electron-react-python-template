@@ -1,7 +1,5 @@
 const { app, globalShortcut, BrowserWindow, dialog } = require("electron");
 const path = require("path");
-
-// Import modules
 const { Logger } = require("./utils/logger");
 const {
   createSplashWindow,
@@ -11,23 +9,17 @@ const {
   createMainWindow,
   loadMainWindowContent,
 } = require("./windows/mainWindow");
-const {
-  checkAndShowMainWindow,
-  resetWindowManagerState,
-} = require("./windows/windowManager");
+const { checkAndShowMainWindow } = require("./windows/windowManager");
 const { launchFrontend } = require("./frontend/frontendManager");
 const { launchBackend, killAllProcesses } = require("./backend/backendManager");
 const { setupIpcHandlers } = require("./ipc");
-
-// Import license manager functions
 const {
   initLicenseManager,
   onAppLaunch,
-  verifyStoredLicense,
-  setLicenseValid,
-  showLicenseWindow,
-  getIsLicenseValid,
+  handleAppActivation,
 } = require("./lib/licenseManager");
+const { getPort } = require("./utils/getPort");
+const { default: setupGlobalShortcuts } = require("./lib/setupGlobalShortcuts");
 
 // Constants
 const isDev = !app.isPackaged;
@@ -70,8 +62,7 @@ async function createWindow() {
       loadMainWindowContent(frontendPath);
 
       // Get a dynamic port for the backend
-      const { default: getPort } = await import("get-port");
-      backendPort = await getPort({ port: getPort.makeRange(5000, 5100) });
+      backendPort = await getPort();
       Logger.log(`Allocated backend port: ${backendPort}`);
       if (store) {
         store.set("backendPort", backendPort);
@@ -88,32 +79,6 @@ async function createWindow() {
   }
 
   return mainWindow;
-}
-
-/**
- * Sets up global shortcuts
- */
-function setupGlobalShortcuts() {
-  // Disable reload and dev tools shortcuts
-  if (!isDev) {
-    globalShortcut.register("CommandOrControl+R", () => {
-      // Prevent reload
-    });
-  }
-
-  globalShortcut.register("CommandOrControl+Shift+R", () => {
-    // Prevent hard reload
-  });
-
-  globalShortcut.register("F5", () => {
-    // Prevent refresh
-  });
-
-  globalShortcut.register("CommandOrControl+Shift+I", () => {
-    // Prevent DevTools
-  });
-
-  Logger.log("Global shortcuts registered");
 }
 
 /**
@@ -191,6 +156,8 @@ app.on("window-all-closed", () => {
 // Handle before quit
 app.on("before-quit", () => {
   killAllProcesses();
+
+  // Unregister all shortcuts
   globalShortcut.unregisterAll();
 });
 
@@ -200,60 +167,6 @@ process.on("exit", () => {
 });
 
 // Handle app activation (macOS)
-app.on("activate", () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    if (getIsLicenseValid()) {
-      // Reset state and recreate windows
-      resetWindowManagerState();
-      if (SHOW_SPLASH_SCREEN) {
-        createSplashWindow().then(() => {
-          createWindow();
-        });
-      } else {
-        createWindow();
-      }
-    } else if (licenseManager) {
-      // Check if there's a stored license that might need re-verification
-      const getStoredLicense = async () => {
-        try {
-          const { default: Store } = await import("electron-store");
-          const tempStore = new Store();
-          return tempStore.get("licenseKey");
-        } catch (error) {
-          Logger.error("Error getting stored license:", error);
-          return null;
-        }
-      };
-
-      getStoredLicense().then((storedLicense) => {
-        if (storedLicense) {
-          // Try to verify the stored license again
-          verifyStoredLicense(storedLicense)
-            .then((isValid) => {
-              if (isValid) {
-                setLicenseValid(true);
-                // Reset state and recreate windows
-                resetWindowManagerState();
-                if (SHOW_SPLASH_SCREEN) {
-                  createSplashWindow().then(() => {
-                    createWindow();
-                  });
-                } else {
-                  createWindow();
-                }
-              } else {
-                showLicenseWindow();
-              }
-            })
-            .catch(() => {
-              showLicenseWindow();
-            });
-        } else {
-          showLicenseWindow();
-        }
-      });
-    }
-  }
-});
+app.on("activate", handleAppActivation);
 
 Logger.log("Main process initialized");

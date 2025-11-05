@@ -1,9 +1,13 @@
-const { app } = require("electron");
+const { app, BrowserWindow } = require("electron");
 const https = require("https");
 const {
   createLicenseWindow,
   closeLicenseWindow,
 } = require("../windows/licenseWindow");
+const {
+  createSplashWindow,
+} = require("../windows/splashWindow");
+const { resetWindowManagerState } = require("../windows/windowManager");
 
 // Product ID for Gumroad - this needs to be your actual product ID from Gumroad
 // For products created after Jan 9, 2023, use the product ID, not permalink
@@ -515,6 +519,68 @@ function getIsLicenseValid() {
   return licenseState.isLicenseValid;
 }
 
+// Handle app activation (macOS)
+function handleAppActivation() {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    if (getIsLicenseValid()) {
+      // Reset state and recreate windows
+      resetWindowManagerState();
+      if (licenseState.createMainWindow) {
+        if (SHOW_SPLASH_SCREEN) {
+          createSplashWindow().then(() => {
+            licenseState.createMainWindow();
+          });
+        } else {
+          licenseState.createMainWindow();
+        }
+      }
+    } else {
+      // Check if there's a stored license that might need re-verification
+      const getStoredLicense = async () => {
+        try {
+          const { default: Store } = await import("electron-store");
+          const tempStore = new Store();
+          return tempStore.get("licenseKey");
+        } catch (error) {
+          console.error("Error getting stored license:", error);
+          return null;
+        }
+      };
+
+      getStoredLicense().then((storedLicense) => {
+        if (storedLicense) {
+          // Try to verify the stored license again
+          verifyStoredLicense(storedLicense)
+            .then((isValid) => {
+              if (isValid) {
+                setLicenseValid(true);
+                // Reset state and recreate windows
+                resetWindowManagerState();
+                if (licenseState.createMainWindow) {
+                  if (SHOW_SPLASH_SCREEN) {
+                    createSplashWindow().then(() => {
+                      licenseState.createMainWindow();
+                    });
+                  } else {
+                    licenseState.createMainWindow();
+                  }
+                }
+              } else {
+                showLicenseWindow();
+              }
+            })
+            .catch(() => {
+              showLicenseWindow();
+            });
+        } else {
+          showLicenseWindow();
+        }
+      });
+    }
+  }
+}
+
+
 // Export all functions
 module.exports = {
   initLicenseManager,
@@ -530,4 +596,5 @@ module.exports = {
   setLicenseValid,
   getIsLicenseValid,
   closeMainWindow,
+  handleAppActivation,
 };

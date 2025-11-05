@@ -3,16 +3,6 @@ const fs = require("fs");
 const { Logger } = require("../utils/logger");
 
 let frontendPort = null;
-
-/**
- * Gets an available port
- * @returns {Promise<number>} Available port number
- */
-async function getPort() {
-  const gp = (await import("get-port")).default;
-  return gp();
-}
-
 let waitOn = null;
 
 /**
