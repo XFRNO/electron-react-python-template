@@ -18,7 +18,17 @@ import { processManager } from "./lib/processManager";
 import { setupIpcHandlers } from "./ipc/index";
 import { getPort } from "./utils/getPort";
 import setupGlobalShortcuts from "./lib/setupGlobalShortcuts";
-import Store from "electron-store";
+import Store, { Schema } from "electron-store";
+
+// Define an interface for the store's data
+interface StoreData {
+  backendPort?: number;
+  // Add other properties as needed
+}
+
+const schema: Schema<StoreData> = {
+  backendPort: { type: "number", optional: true },
+};
 
 // Constants
 const isDev = !app.isPackaged;
@@ -28,7 +38,7 @@ const ROOT = path.join(__dirname, "../../");
 const SHOW_SPLASH_SCREEN = false;
 
 // Global state
-let store: Store | null = null;
+let store: Store<StoreData> | null = null;
 let appStartTime: number | null = null;
 let backendPort: number | null = null;
 
@@ -68,15 +78,16 @@ async function createWindow(): Promise<BrowserWindow> {
       }
 
       // Start backend in parallel (production only)
+      const frontendUrl = `http://localhost:${frontendPort}`;
       backendManager
-        .start(isDev, ROOT, backendPort, null, frontendPort)
+        .start(isDev, ROOT, frontendUrl, frontendPort)
         .catch((err) => {
           Logger.error("Backend startup failed:", err);
         });
     }
-  } catch (error) {
+  } catch (error: unknown) {
     Logger.error("Error setting up application:", error);
-    await showSplashError(`Application setup failed: ${error.message}`);
+    await showSplashError(`Application setup failed: ${(error as Error).message}`);
   }
 
   return mainWindow;
@@ -99,8 +110,13 @@ app.whenReady().then(async () => {
       await createSplashWindow();
     }
 
+    // Initialize electron-store
+    store = new Store<StoreData>({ schema });
+
     // Initialize LicenseManager
-    licenseManager.init(store, isDev, ROOT);
+    if (store) {
+      licenseManager.init(store, isDev, ROOT);
+    }
 
     // Setup IPC handlers
     setupIpcHandlers(createWindow, isDev);
@@ -109,18 +125,32 @@ app.whenReady().then(async () => {
     Logger.log("Starting app launch sequence");
     await licenseManager.onAppLaunch(createWindow);
 
+    // Get backend port from store or assign a new one
+    backendPort = store.get("backendPort");
+    if (!backendPort) {
+      backendPort = await getPort({ port: 8000 });
+      store.set("backendPort", backendPort);
+    }
+
+    // Start backend in parallel (production only)
+    const frontendUrl = `http://localhost:${backendPort}`;
+    backendManager
+      .start(isDev, ROOT, frontendUrl, backendPort)
+      .catch((err) => {
+        Logger.error("Backend startup failed:", err);
+      });
     const elapsed = Date.now() - appStartTime;
     Logger.log(`App launch sequence completed (took ${elapsed}ms)`);
-  } catch (error) {
+  } catch (error: unknown) {
     Logger.error("Startup error:", error);
 
     // Show error in splash window instead of dialog (if splash is enabled)
     if (SHOW_SPLASH_SCREEN) {
       try {
-        await showSplashError(`Startup error: ${error.message}`);
-      } catch (splashError) {
+        await showSplashError(`Startup error: ${(error as Error).message}`);
+      } catch (splashError: unknown) {
         // Fallback to dialog if splash error fails
-        dialog.showErrorBox("Startup error", String(error));
+        dialog.showErrorBox("Startup error", String(splashError));
         app.quit();
       }
     } else {

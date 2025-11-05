@@ -2,11 +2,12 @@
    "name": "electron",
    "version": "1.0.0",
    "description": "A template for building cross-platform desktop applications with Electron, React, and Python",
-   "main": "src/main.js",
+   "main": "dist/main.js",
    "scripts": {
-      "dev": "electron .",
+      "dev": "cross-env NODE_ENV=development ts-node src/main.ts",
       "start": "electron .",
-      "build": "electron-builder",
+      "build": "tsc -p tsconfig.json && electron-builder",
+      "build:ts": "tsc -p tsconfig.json",
       "build:electron": "electron-builder",
       "build:mac-arm64": "electron-builder --mac --arm64",
       "build:mac-x64": "electron-builder --mac --x64",
@@ -17,6 +18,9 @@
    "build": {
       "appId": "com.xfrno.electron",
       "productName": "Electron React Python Template",
+      "directories": {
+         "output": "release"
+      },
       "asar": false,
       "asarUnpack": [
          "**/node_modules/**",
@@ -24,7 +28,8 @@
          "src/**"
       ],
       "files": [
-         "**/*",
+         "dist/**/*",
+         "package.json",
          "lib/**"
       ],
       "extraResources": [
@@ -84,10 +89,14 @@
       "get-port": "^7.1.0"
    },
    "devDependencies": {
+      "@types/electron": "^1.6.12",
+      "@types/node": "^24.9.2",
       "cross-env": "^7.0.3",
       "electron": "29.4.6",
       "electron-builder": "^24.9.1",
       "htmlhint": "^1.7.1",
+      "ts-node": "^10.9.2",
+      "typescript": "^5.9.3",
       "wait-on": "^9.0.1"
    }
 }
