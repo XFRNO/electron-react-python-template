@@ -1,18 +1,13 @@
-const { BrowserWindow, app } = require("electron");
-const path = require("path");
-const { Logger } = require("../utils/logger");
+import { BrowserWindow, app } from "electron";
+import path from "path";
+import { Logger } from "../utils/logger";
 
-let splashWindow = null;
+let splashWindow: BrowserWindow | null = null;
 
-/**
- * Creates and shows the splash window
- * @returns {Promise<BrowserWindow>} The splash window instance
- */
-async function createSplashWindow() {
+export async function createSplashWindow(): Promise<BrowserWindow> {
   const ROOT = path.join(__dirname, "../../../");
 
-  // Define window options with icon for development
-  const windowOptions = {
+  const windowOptions: Electron.BrowserWindowConstructorOptions = {
     width: 400,
     height: 300,
     transparent: true,
@@ -28,19 +23,15 @@ async function createSplashWindow() {
     },
   };
 
-  // Add platform-specific icon for development mode
   if (!app.isPackaged) {
     const platform = process.platform;
     let iconPath;
 
     if (platform === "darwin") {
-      // macOS
       iconPath = path.join(ROOT, "assets/icon.icns");
     } else if (platform === "win32") {
-      // Windows
       iconPath = path.join(ROOT, "assets/icon.ico");
     } else {
-      // Linux and others
       iconPath = path.join(ROOT, "assets/icon.png");
     }
 
@@ -65,11 +56,7 @@ async function createSplashWindow() {
   return splashWindow;
 }
 
-/**
- * Shows an error message in the splash window
- * @param {string} errorMessage - The error message to display
- */
-async function showSplashError(errorMessage) {
+export async function showSplashError(errorMessage: string): Promise<void> {
   if (splashWindow && !splashWindow.isDestroyed()) {
     await splashWindow.webContents.executeJavaScript(`
       window.splashApi.showError("${errorMessage
@@ -80,10 +67,7 @@ async function showSplashError(errorMessage) {
   }
 }
 
-/**
- * Closes the splash window immediately
- */
-function closeSplashWindow() {
+export function closeSplashWindow(): void {
   if (splashWindow && !splashWindow.isDestroyed()) {
     splashWindow.close();
     splashWindow = null;
@@ -91,17 +75,6 @@ function closeSplashWindow() {
   }
 }
 
-/**
- * Gets the current splash window instance
- * @returns {BrowserWindow|null}
- */
-function getSplashWindow() {
+export function getSplashWindow(): BrowserWindow | null {
   return splashWindow;
 }
-
-module.exports = {
-  createSplashWindow,
-  showSplashError,
-  closeSplashWindow,
-  getSplashWindow,
-};
