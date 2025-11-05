@@ -1,21 +1,24 @@
-const { app, globalShortcut, BrowserWindow, dialog } = require("electron");
-const path = require("path");
-const { Logger } = require("./utils/logger");
-const {
+import { app, globalShortcut, BrowserWindow, dialog } from "electron";
+import path from "path";
+import { Logger } from "./utils/logger";
+import {
   createSplashWindow,
   showSplashError,
-} = require("./windows/splashWindow");
-const {
+} from "./windows/splashWindow";
+import {
   createMainWindow,
   loadMainWindowContent,
-} = require("./windows/mainWindow");
-const { checkAndShowMainWindow } = require("./windows/windowManager");
-const { frontendManager } = require("./lib/frontendManager");
-const { backendManager } = require("./lib/backendManager");
-const { licenseManager } = require("./lib/licenseManager");
-import { setupIpcHandlers } from "./ipc/index.ts";
-const { getPort } = require("./utils/getPort");
-const { default: setupGlobalShortcuts } = require("./lib/setupGlobalShortcuts");
+} from "./windows/mainWindow";
+import { checkAndShowMainWindow } from "./windows/windowManager";
+import { getMainWindow } from "./windows/mainWindow";
+import { frontendManager } from "./lib/frontendManager";
+import { backendManager } from "./lib/backendManager";
+import { licenseManager } from "./lib/licenseManager";
+import { processManager } from "./lib/processManager";
+import { setupIpcHandlers } from "./ipc/index";
+import { getPort } from "./utils/getPort";
+import setupGlobalShortcuts from "./lib/setupGlobalShortcuts";
+import Store from "electron-store";
 
 // Constants
 const isDev = !app.isPackaged;
@@ -25,15 +28,15 @@ const ROOT = path.join(__dirname, "../../");
 const SHOW_SPLASH_SCREEN = false;
 
 // Global state
-let store = null;
-let appStartTime = null;
-let backendPort = null;
+let store: Store | null = null;
+let appStartTime: number | null = null;
+let backendPort: number | null = null;
 
 /**
  * Creates the main application window
  * @returns {Promise<BrowserWindow>} The main window instance
  */
-async function createWindow() {
+async function createWindow(): Promise<BrowserWindow> {
   Logger.log("Creating main window");
 
   // Create main window with content loaded callback
@@ -96,10 +99,6 @@ app.whenReady().then(async () => {
       await createSplashWindow();
     }
 
-    // Initialize electron-store
-    const { default: Store } = await import("electron-store");
-    store = new Store();
-
     // Initialize LicenseManager
     licenseManager.init(store, isDev, ROOT);
 
@@ -134,7 +133,7 @@ app.whenReady().then(async () => {
 
 // Handle second instance
 app.on("second-instance", () => {
-  const mainWindow = require("./windows/mainWindow").getMainWindow();
+  const mainWindow = getMainWindow();
   if (mainWindow) {
     if (mainWindow.isMinimized()) mainWindow.restore();
     mainWindow.focus();
@@ -143,7 +142,7 @@ app.on("second-instance", () => {
 
 // Handle all windows closed
 app.on("window-all-closed", () => {
-  const elapsed = Date.now() - appStartTime;
+  const elapsed = Date.now() - (appStartTime || 0);
   Logger.log(`App closing (ran for ${elapsed}ms)`);
   backendManager.stop();
   frontendManager.kill();
