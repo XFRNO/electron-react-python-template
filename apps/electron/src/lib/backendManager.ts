@@ -2,13 +2,13 @@ import path from "path";
 import fs from "fs";
 import http from "http";
 import { Logger } from "../utils/logger";
-import { storageManager } from "../utils/storageManager";
 import {
   setBackendStarted,
   checkAndShowMainWindow,
 } from "../windows/windowManager";
 import { processManager } from "./processManager";
 import getPort from "get-port";
+import { StoreManager } from "../utils/storeManager";
 
 class BackendManager {
   private port: number | null = null;
@@ -24,7 +24,8 @@ class BackendManager {
     isDev: boolean,
     rootPath: string,
     frontendUrl: string,
-    frontendPort: number
+    frontendPort: number,
+    storeManager: StoreManager // Add storeManager as an argument
   ): Promise<void> {
     Logger.time("Backend Launch");
     Logger.log(`🚀 Starting backend (${isDev ? "development" : "production"})`);
@@ -43,7 +44,7 @@ class BackendManager {
       throw new Error(msg);
     }
 
-    const storagePaths = storageManager.getAllPaths();
+    const storagePaths = storeManager.getAllPaths();
     const env = {
       ...process.env,
       PYTHONUNBUFFERED: "1",

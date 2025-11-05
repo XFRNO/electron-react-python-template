@@ -5,12 +5,13 @@ import { Logger } from "../utils/logger";
 let mainWindow: BrowserWindow | null = null;
 let isRefreshing = false;
 let contentLoadTimeout: NodeJS.Timeout | null = null;
-const isDev = !app.isPackaged;
 
 export async function createMainWindow(
-  onContentLoaded: () => void
+  onContentLoaded: () => void,
+  isDev: boolean // Add isDev as an argument
 ): Promise<BrowserWindow> {
   const ROOT = path.join(__dirname, "../../../");
+  // const isDev = !app.isPackaged; // Remove isDev from here
 
   const windowOptions: Electron.BrowserWindowConstructorOptions = {
     title: "Video Downloader",
@@ -45,7 +46,7 @@ export async function createMainWindow(
 
   mainWindow = new BrowserWindow(windowOptions);
 
-  setupMainWindowEvents(onContentLoaded);
+  setupMainWindowEvents(onContentLoaded, isDev); // Pass isDev to setupMainWindowEvents
 
   mainWindow.on("closed", () => {
     mainWindow = null;
@@ -71,7 +72,11 @@ export async function createMainWindow(
   return mainWindow;
 }
 
-function setupMainWindowEvents(onContentLoaded: () => void): void {
+function setupMainWindowEvents(
+  onContentLoaded: () => void,
+  isDev: boolean
+): void {
+  // Add isDev as an argument
   if (!mainWindow) return;
 
   mainWindow.webContents.on("will-navigate", (event, url) => {
@@ -124,7 +129,8 @@ function setupMainWindowEvents(onContentLoaded: () => void): void {
   }
 }
 
-export function loadMainWindowContent(urlOrPath: string): void {
+export function loadMainWindowContent(urlOrPath: string, isDev: boolean): void {
+  // Add isDev as an argument
   if (mainWindow && !mainWindow.isDestroyed()) {
     if (isDev) {
       mainWindow.loadURL(urlOrPath);
@@ -146,7 +152,7 @@ export function getMainWindow(): BrowserWindow | null {
 }
 
 export function isMainWindowReady(): boolean {
-  return mainWindow && !mainWindow.isDestroyed() && !isRefreshing;
+  return mainWindow !== null && !mainWindow.isDestroyed() && !isRefreshing;
 }
 
 export function resetRefreshState(): void {

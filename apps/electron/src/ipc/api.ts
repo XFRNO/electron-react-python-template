@@ -8,11 +8,12 @@ import Store from "electron-store";
  * Sets up API-related IPC handlers
  */
 export function setupApiHandlers(): void {
-  const store = new Store();
+  // Use the global storeManager instance
+  // const store = new Store(); // Removed direct electron-store instantiation
 
   // Get ports information
   ipcMain.handle("get-ports", () => {
-    const backendPort = store.get("backendPort");
+    const backendPort = storeManager.get("backendPort"); // Use storeManager.get
 
     return {
       frontendPort: frontendManager.getPort(),

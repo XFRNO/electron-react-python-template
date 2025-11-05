@@ -8,6 +8,7 @@ import { resetWindowManagerState } from "../windows/windowManager";
 import { processManager } from "./processManager";
 import Store from "electron-store";
 import { TStoreData } from "../types";
+import { StoreManager } from "../utils/storeManager";
 
 const GUMROAD_PRODUCT_ID = "tbU32GxrR5IQl9j7KXzqRg==";
 
@@ -60,7 +61,7 @@ const ERROR_MESSAGES = {
 };
 
 class LicenseManager {
-  private store: Store<TStoreData> | null = null; // Use Store<TStoreData>
+  private store!: StoreManager; // Use StoreManager
   private isDev = false;
   private rootPath = "";
   private isLicenseValid = false;
@@ -68,7 +69,7 @@ class LicenseManager {
   private mainWindowRef: BrowserWindow | null = null;
   private createMainWindow: (() => Promise<BrowserWindow>) | null = null;
 
-  public init(store: Store<TStoreData>, isDev: boolean, rootPath: string) {
+  public init(store: StoreManager, isDev: boolean, rootPath: string) {
     this.store = store;
     this.isDev = isDev;
     this.rootPath = rootPath;
@@ -76,7 +77,7 @@ class LicenseManager {
 
   public async onAppLaunch(createMainWindowFunc: () => Promise<BrowserWindow>) {
     this.createMainWindow = createMainWindowFunc;
-    const storedLicense = this.store?.get("licenseKey") as string;
+    const storedLicense = this.store.get("licenseKey") as string; // Use store.get
 
     if (storedLicense) {
       this.mainWindowRef = await this.createMainWindow();
@@ -112,7 +113,7 @@ class LicenseManager {
       const isValid = await this.verifyWithGumroad(licenseKey, true);
       if (isValid) {
         this.isLicenseValid = true;
-        this.store?.set("licenseKey", licenseKey);
+        this.store.set("licenseKey", licenseKey); // Use store.set
       }
       return { success: isValid };
     } catch (error) {
@@ -133,7 +134,7 @@ class LicenseManager {
     try {
       // The processManager.kill method now expects a string name.
       processManager.kill("license-verifier");
-      this.store?.delete("licenseKey");
+      this.store.delete("licenseKey"); // Use store.delete
       this.isLicenseValid = false;
       return { success: true };
     } catch (error) {
@@ -165,7 +166,7 @@ class LicenseManager {
   }
 
   private async reverifyLicense() {
-    const storedLicense = this.store?.get("licenseKey") as string;
+    const storedLicense = this.store.get("licenseKey") as string; // Use store.get
     if (storedLicense) {
       try {
         const isValid = await this.verifyStoredLicense(storedLicense);
@@ -208,7 +209,7 @@ class LicenseManager {
 
     // Register the background verification function with the process manager.
     processManager.register("license-verifier", async () => {
-      const storedLicense = this.store?.get("licenseKey") as string;
+      const storedLicense = this.store.get("licenseKey") as string; // Use store.get
       if (!storedLicense)
         return this.handleInvalidLicense("No license key found");
 

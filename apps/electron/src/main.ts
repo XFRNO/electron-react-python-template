@@ -11,13 +11,8 @@ import { licenseManager } from "./lib/licenseManager";
 import { processManager } from "./lib/processManager";
 import { setupIpcHandlers } from "./ipc/index";
 import setupGlobalShortcuts from "./lib/setupGlobalShortcuts";
-import Store, { Schema } from "electron-store";
 import getPort from "get-port";
-import { TStoreData } from "./types";
-
-const schema: Schema<TStoreData> = {
-  backendPort: { type: "number" },
-};
+import { storeManager } from "./utils/storeManager";
 
 // Constants
 const isDev = !app.isPackaged;
@@ -27,7 +22,6 @@ const ROOT = path.join(__dirname, "../../");
 const SHOW_SPLASH_SCREEN = false;
 
 // Global state
-let store: Store<TStoreData> | null = null;
 let appStartTime: number | null = null;
 let backendPort: number | null = null;
 
@@ -42,7 +36,7 @@ async function createWindow(): Promise<BrowserWindow> {
   const mainWindow = await createMainWindow(() => {
     // Don't close license window as it might be intentionally shown for license verification
     checkAndShowMainWindow(false);
-  });
+  }, isDev); // Pass isDev here
 
   try {
     if (isDev) {
@@ -50,26 +44,24 @@ async function createWindow(): Promise<BrowserWindow> {
       // Turborepo orchestrates the Vite dev server and FastAPI backend.
       // Electron should NOT spawn any servers. It only waits for the dev frontend URL.
       const frontendUrl = await frontendManager.launch(isDev, ROOT);
-      loadMainWindowContent(frontendUrl);
+      loadMainWindowContent(frontendUrl, isDev);
       // No backend launch in dev mode.
     } else {
       // Production mode:
       // Load built frontend and start the packaged backend executable.
       const frontendPath = await frontendManager.launch(isDev, ROOT);
       const frontendPort = frontendManager.getPort();
-      loadMainWindowContent(frontendPath);
+      loadMainWindowContent(frontendPath, isDev);
 
       // Get a dynamic port for the backend
       backendPort = await getPort();
       Logger.log(`Allocated backend port: ${backendPort}`);
-      if (store) {
-        store.set("backendPort", backendPort);
-      }
+      storeManager.set("backendPort", backendPort);
 
       // Start backend in parallel (production only)
       const frontendUrl = `http://localhost:${frontendPort}`;
       backendManager
-        .start(isDev, ROOT, frontendUrl, frontendPort!)
+        .start(isDev, ROOT, frontendUrl, frontendPort!, storeManager)
         .catch((err) => {
           Logger.error("Backend startup failed:", err);
         });
@@ -101,13 +93,8 @@ app.whenReady().then(async () => {
       await createSplashWindow();
     }
 
-    // Initialize electron-store
-    store = new Store<TStoreData>({ schema });
-
     // Initialize LicenseManager
-    if (store) {
-      licenseManager.init(store, isDev, ROOT);
-    }
+    licenseManager.init(storeManager, isDev, ROOT);
 
     // Setup IPC handlers
     setupIpcHandlers(createWindow, isDev);
@@ -117,17 +104,17 @@ app.whenReady().then(async () => {
     await licenseManager.onAppLaunch(createWindow);
 
     // Get backend port from store or assign a new one
-    backendPort = store?.get("backendPort") ?? null;
+    backendPort = storeManager.get("backendPort") ?? null;
     if (backendPort === null || typeof backendPort !== "number") {
       backendPort = await getPort({ port: 8000 });
-      store?.set("backendPort", backendPort);
+      storeManager.set("backendPort", backendPort);
     }
 
     // Start backend in parallel (production only)
     const frontendUrl = `http://localhost:${backendPort}`;
     if (typeof backendPort === "number") {
       backendManager
-        .start(isDev, ROOT, frontendUrl, backendPort)
+        .start(isDev, ROOT, frontendUrl, backendPort, storeManager)
         .catch((err) => {
           Logger.error("Backend startup failed:", err);
         });
@@ -139,7 +126,7 @@ app.whenReady().then(async () => {
   } catch (error: unknown) {
     Logger.error("Startup error:", error);
 
-    // Show error in splash window instead of dialog (if splash is enabled)
+    // Show error in splash window instead of dialog (if enabled)
     if (SHOW_SPLASH_SCREEN) {
       try {
         await showSplashError(`Startup error: ${(error as Error).message}`);

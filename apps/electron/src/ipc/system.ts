@@ -1,7 +1,7 @@
 import { ipcMain, shell, dialog, BrowserWindow, app } from "electron";
 import { Logger } from "../utils/logger";
-import { resetWindowManagerState } from "../windows/windowManager.js";
-import { setLicenseValid } from "../lib/licenseManager.js";
+import { resetWindowManagerState } from "../windows/windowManager";
+import { setLicenseValid } from "../lib/licenseManager";
 
 /**
  * Sets up system-related IPC handlers

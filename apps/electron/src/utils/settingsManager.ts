@@ -1,7 +1,7 @@
 import { app } from "electron";
 import path from "path";
-import Store from "electron-store";
 import { Logger } from "./logger";
+import { storeManager } from "./storeManager"; // Import the new storeManager
 
 interface Settings {
   default_output_path: string;
@@ -10,21 +10,25 @@ interface Settings {
 }
 
 class SettingsManager {
-  private store: Store<Settings> | null = null;
   private initialized = false;
 
   private async initialize(): Promise<boolean> {
     if (this.initialized) return true;
 
     try {
-      this.store = new Store<Settings>({
-        name: "settings",
-        defaults: {
-          default_output_path: path.join(app.getPath("home"), "Downloads"),
-          default_format: "mp4",
-          default_quality: "best",
-        },
-      });
+      // Set default settings if they don't exist in storeManager
+      if (storeManager.get("default_output_path") === undefined) {
+        storeManager.set(
+          "default_output_path",
+          path.join(app.getPath("home"), "Downloads")
+        );
+      }
+      if (storeManager.get("default_format") === undefined) {
+        storeManager.set("default_format", "mp4");
+      }
+      if (storeManager.get("default_quality") === undefined) {
+        storeManager.set("default_quality", "best");
+      }
 
       this.initialized = true;
       Logger.log("SettingsManager initialized successfully");
@@ -55,7 +59,11 @@ class SettingsManager {
         }
       }
 
-      const settings = this.store!.store;
+      const settings: Settings = {
+        default_output_path: storeManager.get("default_output_path") as string,
+        default_format: storeManager.get("default_format") as string,
+        default_quality: storeManager.get("default_quality") as string,
+      };
       return {
         success: true,
         data: settings,
@@ -83,7 +91,7 @@ class SettingsManager {
         }
       }
 
-      const value = this.store!.get(key);
+      const value = storeManager.get(key);
       return {
         success: true,
         data: value,
@@ -112,7 +120,7 @@ class SettingsManager {
         }
       }
 
-      this.store!.set(key, value);
+      storeManager.set(key, value);
       Logger.log(`Setting updated: ${key} = ${value}`);
       return {
         success: true,
@@ -140,7 +148,11 @@ class SettingsManager {
         }
       }
 
-      this.store!.set(settings);
+      for (const key in settings) {
+        if (Object.prototype.hasOwnProperty.call(settings, key)) {
+          storeManager.set(key as keyof Settings, settings[key as keyof Settings]);
+        }
+      }
       Logger.log("Multiple settings updated:", settings);
       return {
         success: true,
