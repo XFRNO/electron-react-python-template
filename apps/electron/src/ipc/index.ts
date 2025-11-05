@@ -14,7 +14,9 @@ export function setupIpcHandlers(
   isDev: boolean
 ): void {
   // Setup license handlers
-  setupLicenseHandlers(createWindow);
+  setupLicenseHandlers(async () => {
+    createWindow();
+  });
 
   // Setup API handlers
   setupApiHandlers();

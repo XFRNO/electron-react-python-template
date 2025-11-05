@@ -1,9 +1,11 @@
 import { app, BrowserWindow } from "electron";
 import https from "https";
 import Store from "electron-store";
-import { createLicenseWindow, closeLicenseWindow } from "../windows/licenseWindow";
+import { createLicenseWindow } from "../windows/licenseWindow";
 import { createSplashWindow } from "../windows/splashWindow";
 import { resetWindowManagerState } from "../windows/windowManager";
+import { processManager } from "./processManager";
+import { Logger } from "../utils/logger";
 
 const GUMROAD_PRODUCT_ID = "tbU32GxrR5IQl9j7KXzqRg==";
 
@@ -62,7 +64,6 @@ class LicenseManager {
   private isLicenseValid = false;
   private licenseWindow: BrowserWindow | null = null;
   private mainWindowRef: BrowserWindow | null = null;
-  private backgroundVerificationInProgress = false;
   private createMainWindow: (() => Promise<BrowserWindow>) | null = null;
 
   public init(store: Store, isDev: boolean, rootPath: string) {
@@ -105,6 +106,7 @@ class LicenseManager {
           "License key has already been activated. Please contact support if you believe this is an error."
         );
       }
+
       const isValid = await this.verifyWithGumroad(licenseKey, true);
       if (isValid) {
         this.isLicenseValid = true;
@@ -127,6 +129,8 @@ class LicenseManager {
 
   public async clearLicense() {
     try {
+      // The processManager.kill method now expects a string name.
+      processManager.kill("license-verifier");
       this.store?.delete("licenseKey");
       this.isLicenseValid = false;
       return { success: true };
@@ -169,7 +173,7 @@ class LicenseManager {
         } else {
           this.showLicenseWindow();
         }
-      } catch (error) {
+      } catch {
         this.showLicenseWindow();
       }
     } else {
@@ -178,9 +182,8 @@ class LicenseManager {
   }
 
   private async verifyStoredLicense(licenseKey: string) {
-    if (!licenseKey) {
-      return false;
-    }
+    if (!licenseKey) return false;
+
     try {
       const verificationPromise = this.verifyWithGumroad(licenseKey, false);
       const timeoutPromise = new Promise((_, reject) =>
@@ -193,47 +196,49 @@ class LicenseManager {
       }
     } catch (error) {
       this.handleLicenseError(error as Error, false);
-      return false;
     }
     return false;
   }
 
   private async startBackgroundVerification() {
-    if (this.backgroundVerificationInProgress) {
-      return;
-    }
-    this.backgroundVerificationInProgress = true;
-    try {
+    // Ensure no duplicates by killing any existing 'license-verifier' process.
+    processManager.kill("license-verifier");
+
+    // Register the background verification function with the process manager.
+    processManager.register("license-verifier", async () => {
       const storedLicense = this.store?.get("licenseKey") as string;
-      if (storedLicense) {
-        const verificationPromise = this.verifyWithGumroad(storedLicense, false);
+      if (!storedLicense)
+        return this.handleInvalidLicense("No license key found");
+
+      try {
+        const verificationPromise = this.verifyWithGumroad(
+          storedLicense,
+          false
+        );
         const timeoutPromise = new Promise((_, reject) =>
           setTimeout(() => reject(new Error("Verification timeout")), 5000)
         );
-        try {
-          const isValid = await Promise.race([
-            verificationPromise,
-            timeoutPromise,
-          ]);
-          if (isValid) {
-            this.isLicenseValid = true;
-            this.notifyMainWindow("license-verified", { valid: true });
-          } else {
-            this.handleInvalidLicense("Invalid license key");
-          }
-        } catch (error) {
-          this.handleLicenseError(error as Error, true);
+
+        const isValid = await Promise.race([
+          verificationPromise,
+          timeoutPromise,
+        ]);
+        if (isValid) {
+          this.isLicenseValid = true;
+          this.notifyMainWindow("license-verified", { valid: true });
+        } else {
+          this.handleInvalidLicense("Invalid license key");
         }
-      } else {
-        setTimeout(() => {
-          if (!this.isLicenseValid) {
-            this.handleInvalidLicense("No license key found");
-          }
-        }, 30000); // 30 second grace period
+      } catch (error) {
+        Logger.error(
+          `License verification failed: ${(error as Error).message}`
+        );
+        this.handleLicenseError(error as Error, false);
       }
-    } finally {
-      this.backgroundVerificationInProgress = false;
-    }
+    });
+
+    // Start the registered 'license-verifier' process.
+    processManager.start("license-verifier");
   }
 
   private handleInvalidLicense(reason: string) {
@@ -258,9 +263,7 @@ class LicenseManager {
     }
     this.isLicenseValid = false;
     this.notifyMainWindow("license-invalid", { reason });
-    setTimeout(() => {
-      this.showLicenseWindow();
-    }, 5000);
+    setTimeout(() => this.showLicenseWindow(), 5000);
   }
 
   private handleLicenseError(
@@ -276,17 +279,12 @@ class LicenseManager {
         errorConfig.title,
         customMessage || errorConfig.message
       );
-      if (shouldQuit) {
-        app.quit();
-      }
+      if (shouldQuit) app.quit();
     }, 50);
     this.isLicenseValid = false;
   }
 
-  private async showLicenseWindow(
-    errorTitle?: string,
-    errorMessage?: string
-  ) {
+  private async showLicenseWindow(errorTitle?: string, errorMessage?: string) {
     this.closeMainWindow();
     try {
       this.licenseWindow = await createLicenseWindow(this.rootPath, this.isDev);
@@ -298,7 +296,9 @@ class LicenseManager {
         );
       }
     } catch (error) {
-      // Silently fail
+      Logger.error(
+        `Failed to show license window: ${(error as Error).message}`
+      );
     }
   }
 
@@ -343,40 +343,15 @@ class LicenseManager {
 
   private validatePurchase(purchase: any) {
     if (!purchase) return;
-    if (purchase.refunded === true) {
-      throw new Error(
-        "License has been refunded. Please contact support if you believe this is an error."
-      );
-    }
-    if (purchase.chargebacked === true) {
-      throw new Error(
-        "License has been chargebacked. Please contact support if you believe this is an error."
-      );
-    }
-    if (
-      purchase.subscription_ended_at !== null &&
-      purchase.subscription_ended_at !== undefined
-    ) {
-      throw new Error(
-        "License subscription has ended. Please contact support to renew your subscription."
-      );
-    }
-    if (
-      purchase.subscription_cancelled_at !== null &&
-      purchase.subscription_cancelled_at !== undefined
-    ) {
-      throw new Error(
-        "License subscription has been cancelled. Please contact support to renew your subscription."
-      );
-    }
-    if (
-      purchase.subscription_failed_at !== null &&
-      purchase.subscription_failed_at !== undefined
-    ) {
-      throw new Error(
-        "License subscription payment failed. Please update your payment method to continue using the service."
-      );
-    }
+    if (purchase.refunded) throw new Error("License has been refunded.");
+    if (purchase.chargebacked)
+      throw new Error("License has been chargebacked.");
+    if (purchase.subscription_ended_at)
+      throw new Error("License subscription has ended.");
+    if (purchase.subscription_cancelled_at)
+      throw new Error("License subscription has been cancelled.");
+    if (purchase.subscription_failed_at)
+      throw new Error("License subscription payment failed.");
   }
 
   private makeGumroadRequest(
@@ -402,21 +377,20 @@ class LicenseManager {
       };
       const req = https.request(options, (res) => {
         let data = "";
-        res.on("data", (chunk) => {
-          data += chunk;
-        });
+        res.on("data", (chunk) => (data += chunk));
         res.on("end", () => {
           try {
-            const response = JSON.parse(data);
-            resolve(response);
+            resolve(JSON.parse(data));
           } catch (error) {
-            reject(new Error(`Failed to parse response: ${(error as Error).message}`));
+            reject(
+              new Error(`Failed to parse response: ${(error as Error).message}`)
+            );
           }
         });
       });
-      req.on("error", (error) => {
-        reject(new Error(`Network error: ${error.message}`));
-      });
+      req.on("error", (error) =>
+        reject(new Error(`Network error: ${error.message}`))
+      );
       req.on("timeout", () => {
         req.destroy();
         reject(new Error("Request timeout"));
@@ -430,53 +404,27 @@ class LicenseManager {
     licenseKey: string,
     incrementUsesCount = false
   ): Promise<boolean> {
-    if (!GUMROAD_PRODUCT_ID || GUMROAD_PRODUCT_ID.length < 10) {
+    if (!GUMROAD_PRODUCT_ID || GUMROAD_PRODUCT_ID.length < 10)
       throw new Error(
-        "Invalid product ID. Please check your Gumroad product configuration."
+        "Invalid product ID. Please check your Gumroad configuration."
       );
-    }
-    if (!licenseKey) {
-      throw new Error("No license key provided for verification");
-    }
-    try {
-      const response = await this.makeGumroadRequest(
-        licenseKey,
-        incrementUsesCount
-      );
-      if (response.success === true) {
-        this.validatePurchase(response.purchase);
-        if (response.uses !== undefined && response.uses > 1) {
-          throw new Error(
-            "License key has already been activated. Please contact support if you believe this is an error."
-          );
-        }
-        return true;
-      } else {
-        if (response.message?.includes("product")) {
-          throw new Error(`Invalid product ID: ${response.message}`);
-        }
-        if (
-          response.message?.includes("uses") ||
-          response.message?.includes("already")
-        ) {
-          throw new Error(
-            "License key has already been activated on another device. Please contact support to transfer your license."
-          );
-        }
-        if (response.message?.includes("disabled")) {
-          throw new Error(
-            "This license key has been disabled. Please contact support for assistance."
-          );
-        }
-        if (response.message?.includes("expired")) {
-          throw new Error(
-            "Access to the purchase associated with this license has expired. Please contact support to renew your subscription."
-          );
-        }
-        return false;
+    if (!licenseKey)
+      throw new Error("No license key provided for verification.");
+
+    const response = await this.makeGumroadRequest(
+      licenseKey,
+      incrementUsesCount
+    );
+    if (response.success === true) {
+      this.validatePurchase(response.purchase);
+      if (response.uses !== undefined && response.uses > 1) {
+        throw new Error(
+          "License key has already been activated on another device."
+        );
       }
-    } catch (error) {
-      throw error;
+      return true;
+    } else {
+      throw new Error(response.message || "License verification failed");
     }
   }
 }

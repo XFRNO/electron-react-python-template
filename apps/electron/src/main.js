@@ -65,9 +65,11 @@ async function createWindow() {
       }
 
       // Start backend in parallel (production only)
-      backendManager.start(isDev, ROOT, backendPort, null, frontendPort).catch((err) => {
-        Logger.error("Backend startup failed:", err);
-      });
+      backendManager
+        .start(isDev, ROOT, backendPort, null, frontendPort)
+        .catch((err) => {
+          Logger.error("Backend startup failed:", err);
+        });
     }
   } catch (error) {
     Logger.error("Error setting up application:", error);
@@ -152,6 +154,7 @@ app.on("window-all-closed", () => {
 app.on("before-quit", () => {
   backendManager.stop();
   frontendManager.kill();
+  processManager.killAll();
 
   // Unregister all shortcuts
   globalShortcut.unregisterAll();
@@ -161,6 +164,7 @@ app.on("before-quit", () => {
 process.on("exit", () => {
   backendManager.stop();
   frontendManager.kill();
+  processManager.killAll();
 });
 
 // Handle app activation (macOS)
