@@ -2,13 +2,13 @@ import path from "path";
 import fs from "fs";
 import http from "http";
 import { Logger } from "../utils/logger";
-import { getPort } from "../utils/getPort";
 import { storageManager } from "../utils/storageManager";
 import {
   setBackendStarted,
   checkAndShowMainWindow,
 } from "../windows/windowManager";
 import { processManager } from "./processManager";
+import getPort from "get-port";
 
 class BackendManager {
   private port: number | null = null;

@@ -1,14 +1,8 @@
 import { app, globalShortcut, BrowserWindow, dialog } from "electron";
 import path from "path";
 import { Logger } from "./utils/logger";
-import {
-  createSplashWindow,
-  showSplashError,
-} from "./windows/splashWindow";
-import {
-  createMainWindow,
-  loadMainWindowContent,
-} from "./windows/mainWindow";
+import { createSplashWindow, showSplashError } from "./windows/splashWindow";
+import { createMainWindow, loadMainWindowContent } from "./windows/mainWindow";
 import { checkAndShowMainWindow } from "./windows/windowManager";
 import { getMainWindow } from "./windows/mainWindow";
 import { frontendManager } from "./lib/frontendManager";
@@ -16,18 +10,13 @@ import { backendManager } from "./lib/backendManager";
 import { licenseManager } from "./lib/licenseManager";
 import { processManager } from "./lib/processManager";
 import { setupIpcHandlers } from "./ipc/index";
-import { getPort } from "./utils/getPort";
 import setupGlobalShortcuts from "./lib/setupGlobalShortcuts";
 import Store, { Schema } from "electron-store";
+import getPort from "get-port";
+import { TStoreData } from "./types";
 
-// Define an interface for the store's data
-interface StoreData {
-  backendPort?: number;
-  // Add other properties as needed
-}
-
-const schema: Schema<StoreData> = {
-  backendPort: { type: "number", optional: true },
+const schema: Schema<TStoreData> = {
+  backendPort: { type: "number" },
 };
 
 // Constants
@@ -38,7 +27,7 @@ const ROOT = path.join(__dirname, "../../");
 const SHOW_SPLASH_SCREEN = false;
 
 // Global state
-let store: Store<StoreData> | null = null;
+let store: Store<TStoreData> | null = null;
 let appStartTime: number | null = null;
 let backendPort: number | null = null;
 
@@ -80,14 +69,16 @@ async function createWindow(): Promise<BrowserWindow> {
       // Start backend in parallel (production only)
       const frontendUrl = `http://localhost:${frontendPort}`;
       backendManager
-        .start(isDev, ROOT, frontendUrl, frontendPort)
+        .start(isDev, ROOT, frontendUrl, frontendPort!)
         .catch((err) => {
           Logger.error("Backend startup failed:", err);
         });
     }
   } catch (error: unknown) {
     Logger.error("Error setting up application:", error);
-    await showSplashError(`Application setup failed: ${(error as Error).message}`);
+    await showSplashError(
+      `Application setup failed: ${(error as Error).message}`
+    );
   }
 
   return mainWindow;
@@ -111,7 +102,7 @@ app.whenReady().then(async () => {
     }
 
     // Initialize electron-store
-    store = new Store<StoreData>({ schema });
+    store = new Store<TStoreData>({ schema });
 
     // Initialize LicenseManager
     if (store) {
@@ -126,19 +117,23 @@ app.whenReady().then(async () => {
     await licenseManager.onAppLaunch(createWindow);
 
     // Get backend port from store or assign a new one
-    backendPort = store.get("backendPort");
-    if (!backendPort) {
+    backendPort = store?.get("backendPort") ?? null;
+    if (backendPort === null || typeof backendPort !== "number") {
       backendPort = await getPort({ port: 8000 });
-      store.set("backendPort", backendPort);
+      store?.set("backendPort", backendPort);
     }
 
     // Start backend in parallel (production only)
     const frontendUrl = `http://localhost:${backendPort}`;
-    backendManager
-      .start(isDev, ROOT, frontendUrl, backendPort)
-      .catch((err) => {
-        Logger.error("Backend startup failed:", err);
-      });
+    if (typeof backendPort === "number") {
+      backendManager
+        .start(isDev, ROOT, frontendUrl, backendPort)
+        .catch((err) => {
+          Logger.error("Backend startup failed:", err);
+        });
+    } else {
+      Logger.error("Invalid backendPort, cannot start backend.");
+    }
     const elapsed = Date.now() - appStartTime;
     Logger.log(`App launch sequence completed (took ${elapsed}ms)`);
   } catch (error: unknown) {

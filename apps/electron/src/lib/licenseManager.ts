@@ -1,11 +1,13 @@
-import { app, BrowserWindow } from "electron";
+import { BrowserWindow } from "electron";
+import { app } from "electron";
 import https from "https";
-import Store from "electron-store";
+import { Logger } from "../utils/logger";
 import { createLicenseWindow } from "../windows/licenseWindow";
 import { createSplashWindow } from "../windows/splashWindow";
 import { resetWindowManagerState } from "../windows/windowManager";
 import { processManager } from "./processManager";
-import { Logger } from "../utils/logger";
+import Store from "electron-store";
+import { TStoreData } from "../types";
 
 const GUMROAD_PRODUCT_ID = "tbU32GxrR5IQl9j7KXzqRg==";
 
@@ -58,7 +60,7 @@ const ERROR_MESSAGES = {
 };
 
 class LicenseManager {
-  private store: Store | null = null;
+  private store: Store<TStoreData> | null = null; // Use Store<TStoreData>
   private isDev = false;
   private rootPath = "";
   private isLicenseValid = false;
@@ -66,7 +68,7 @@ class LicenseManager {
   private mainWindowRef: BrowserWindow | null = null;
   private createMainWindow: (() => Promise<BrowserWindow>) | null = null;
 
-  public init(store: Store, isDev: boolean, rootPath: string) {
+  public init(store: Store<TStoreData>, isDev: boolean, rootPath: string) {
     this.store = store;
     this.isDev = isDev;
     this.rootPath = rootPath;

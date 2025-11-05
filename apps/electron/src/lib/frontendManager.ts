@@ -2,8 +2,8 @@ import path from "path";
 import fs from "fs";
 import { Logger } from "../utils/logger";
 import { waitForResource } from "../utils/waitOnResource";
-import { getPort } from "../utils/getPort";
 import { processManager } from "./processManager";
+import getPort from "get-port";
 
 class FrontendManager {
   private port: number | null = null;
@@ -30,10 +30,15 @@ class FrontendManager {
 
       // Spawn Vite dev server
       Logger.log(`Starting Vite dev server on port ${envPort}...`);
-      this.process = processManager.spawn("frontend-dev-server", "npm", ["run", "dev"], {
-        cwd: frontendDir,
-        env: { ...process.env, PORT: envPort.toString() },
-      });
+      this.process = processManager.spawn(
+        "frontend-dev-server",
+        "npm",
+        ["run", "dev"],
+        {
+          cwd: frontendDir,
+          env: { ...process.env, PORT: envPort.toString() },
+        }
+      );
 
       try {
         await waitForResource({ resource: url });
