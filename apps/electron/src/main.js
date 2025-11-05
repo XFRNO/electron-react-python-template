@@ -10,9 +10,9 @@ const {
   loadMainWindowContent,
 } = require("./windows/mainWindow");
 const { checkAndShowMainWindow } = require("./windows/windowManager");
-const { launchFrontend } = require("./frontend/frontendManager");
-const { launchBackend, killAllProcesses } = require("./backend/backendManager");
-const { setupIpcHandlers } = require("./ipc");
+const { launchFrontend } = require("./lib/frontendManager");
+const { launchBackend, killAllProcesses } = require("./lib/backendManager");
+import { setupIpcHandlers } from "./ipc/index.ts";
 const {
   initLicenseManager,
   onAppLaunch,

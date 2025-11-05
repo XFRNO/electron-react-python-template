@@ -1,17 +1,17 @@
-const { ipcMain, shell, dialog, BrowserWindow, app } = require("electron");
-const { Logger } = require("../utils/logger");
-const {
-  resetWindowManagerState,
-  resetRefreshState,
-} = require("../windows/windowManager");
-const { setLicenseValid } = require("../lib/licenseManager");
+import { ipcMain, shell, dialog, BrowserWindow, app } from "electron";
+import { Logger } from "../utils/logger";
+import { resetWindowManagerState } from "../windows/windowManager.js";
+import { setLicenseValid } from "../lib/licenseManager.js";
 
 /**
  * Sets up system-related IPC handlers
- * @param {boolean} isDev - Development mode flag
- * @param {Function} createWindow - Function to create main window
+ * @param isDev - Development mode flag
+ * @param createWindow - Function to create main window
  */
-function setupSystemHandlers(isDev, createWindow) {
+export function setupSystemHandlers(
+  isDev: boolean,
+  createWindow: () => void
+): void {
   // Restart app
   ipcMain.handle("restart-app", async () => {
     try {
@@ -25,10 +25,9 @@ function setupSystemHandlers(isDev, createWindow) {
 
       // Reset window manager state
       resetWindowManagerState();
-      resetRefreshState();
 
       // Re-launch the app flow
-      const { onAppLaunch } = require("../lib/licenseManager");
+      const { onAppLaunch } = await import("../lib/licenseManager.js");
       setImmediate(() => {
         onAppLaunch(createWindow);
       });
@@ -36,7 +35,7 @@ function setupSystemHandlers(isDev, createWindow) {
       return { success: true };
     } catch (error) {
       Logger.error("Error restarting app:", error);
-      return { success: false, error: error.message };
+      return { success: false, error: (error as Error).message };
     }
   });
 
@@ -50,13 +49,13 @@ function setupSystemHandlers(isDev, createWindow) {
   });
 
   // Show item in folder
-  ipcMain.handle("show-item-in-folder", async (event, filePath) => {
+  ipcMain.handle("show-item-in-folder", async (event, filePath: string) => {
     try {
       shell.showItemInFolder(filePath);
       return { success: true };
     } catch (error) {
       Logger.error("Error showing item in folder:", error);
-      return { success: false, error: error.message };
+      return { success: false, error: (error as Error).message };
     }
   });
 
@@ -74,9 +73,7 @@ function setupSystemHandlers(isDev, createWindow) {
       return { success: true, path: result.filePaths[0] };
     } catch (error) {
       Logger.error("Error selecting output folder:", error);
-      return { success: false, error: error.message };
+      return { success: false, error: (error as Error).message };
     }
   });
 }
-
-module.exports = { setupSystemHandlers };

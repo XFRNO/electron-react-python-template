@@ -207,7 +207,7 @@ async function launchBackend(
       throw new Error(errorMsg);
     }
   }
-  console.timeEnd('Backend Executable Path Determination');
+  console.timeEnd("Backend Executable Path Determination");
 
   if (!fs.existsSync(BACKEND_EXE)) {
     const errorMsg = `Backend executable not found:\n${BACKEND_EXE}`;
@@ -237,7 +237,7 @@ async function launchBackend(
     const python = BACKEND_EXE;
     const backendDir = path.join(rootPath, "../backend");
     // In development, run with uvicorn directly for better control
-    console.time('Spawn Backend Process');
+    console.time("Spawn Backend Process");
     backendProc = spawn(
       python,
       [
@@ -256,7 +256,7 @@ async function launchBackend(
         stdio: ["ignore", "pipe", "pipe"],
       }
     );
-    console.timeEnd('Spawn Backend Process');
+    console.timeEnd("Spawn Backend Process");
 
     // Log backend output for debugging in development too
     backendProc.stdout.on("data", (data) => {
@@ -284,7 +284,7 @@ async function launchBackend(
     });
   } else {
     // For production, spawn the backend executable
-    console.time('Spawn Backend Process');
+    console.time("Spawn Backend Process");
     backendProc = spawn(BACKEND_EXE, [], {
       cwd: path.dirname(BACKEND_EXE),
       env,
@@ -292,7 +292,7 @@ async function launchBackend(
       detached: true,
       shell: false,
     });
-    console.timeEnd('Spawn Backend Process');
+    console.timeEnd("Spawn Backend Process");
 
     backendProc.unref();
 
@@ -327,7 +327,7 @@ async function launchBackend(
     .then(() => {
       const elapsed = Date.now() - waitStartTime;
       console.log(`Backend started successfully (took ${elapsed}ms)`);
-      console.timeEnd('Backend Launch');
+      console.timeEnd("Backend Launch");
     })
     .catch((error) => {
       const errorMsg = `Backend failed to start: ${error.message}`;
@@ -357,7 +357,7 @@ function killBackendProcess() {
 function killAllProcesses() {
   // Import here to avoid circular dependency
   try {
-    const { killFrontendProcess } = require("../frontend/frontendManager");
+    const { killFrontendProcess } = require("./frontendManager");
     killFrontendProcess();
   } catch (error) {
     console.error("Error importing frontend manager:", error);

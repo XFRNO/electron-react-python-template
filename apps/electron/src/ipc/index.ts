@@ -1,15 +1,18 @@
-const { ipcMain } = require("electron");
-const { setupLicenseHandlers } = require("./license");
-const { setupApiHandlers } = require("./api");
-const { setupSystemHandlers } = require("./system");
-const { setupSettingsHandlers } = require("./settings");
+import { ipcMain } from "electron";
+import { setupLicenseHandlers } from "./license";
+import { setupApiHandlers } from "./api";
+import { setupSystemHandlers } from "./system";
+import { setupSettingsHandlers } from "./settings";
 
 /**
  * Sets up all IPC handlers for the application
- * @param {Function} createWindow - Function to create main window
- * @param {boolean} isDev - Development mode flag
+ * @param createWindow - Function to create main window
+ * @param isDev - Development mode flag
  */
-function setupIpcHandlers(createWindow, isDev) {
+export function setupIpcHandlers(
+  createWindow: () => void,
+  isDev: boolean
+): void {
   // Setup license handlers
   setupLicenseHandlers(createWindow);
 
@@ -28,8 +31,7 @@ function setupIpcHandlers(createWindow, isDev) {
   });
 }
 
-module.exports = {
-  setupIpcHandlers,
+export {
   setupLicenseHandlers,
   setupApiHandlers,
   setupSystemHandlers,
