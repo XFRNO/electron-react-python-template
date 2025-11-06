@@ -15,8 +15,8 @@ import { storeManager } from "./utils/storeManager";
 import { Logger } from "./utils/logger";
 
 // Constants
-const isDev = !app.isPackaged;
-const ROOT = path.join(__dirname, "../../");
+// @ts-ignore
+import { isDev, ROOT } from "../../../constants";
 
 // Splash screen flag - set to false to disable splash screen
 const SHOW_SPLASH_SCREEN = false;

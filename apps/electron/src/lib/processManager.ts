@@ -44,7 +44,9 @@ export class ProcessManager {
   kill(name: string) {
     const proc = this.processes.get(name);
     if (!proc || !proc.pid) {
-      Logger.warn(`⚠️ Attempted to kill an invalid or unknown process: ${name}.`);
+      Logger.warn(
+        `⚠️ Attempted to kill an invalid or unknown process: ${name}.`
+      );
       return;
     }
 
@@ -97,7 +99,9 @@ export class ProcessManager {
         await func();
         Logger.log(`Registered process completed: ${name}`);
       } catch (error) {
-        Logger.error(`Registered process failed: ${name} - ${(error as Error).message}`);
+        Logger.error(
+          `Registered process failed: ${name} - ${(error as Error).message}`
+        );
       }
     } else {
       Logger.warn(`⚠️ Attempted to start an unregistered process: ${name}.`);

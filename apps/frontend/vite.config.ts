@@ -5,9 +5,15 @@ import path from "path";
 import { fileURLToPath } from "url";
 import tailwindcss from "@tailwindcss/vite";
 
+console.log("[VITE CONFIG LOADED ✅] file:", import.meta.url);
+
 // https://vitejs.dev/config/
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// ✅ Force-read the env PORT and log it for debugging
+const envPort = process.env.PORT ? Number(process.env.PORT) : 5173;
+console.log(`[Vite Config] Using port ${envPort}`);
 
 export default defineConfig({
   plugins: [react(), tanstackRouter(), tailwindcss()],
@@ -54,5 +60,7 @@ export default defineConfig({
     watch: {
       ignored: ["**/dist/**", "**/node_modules/**"],
     },
+    port: envPort,
+    strictPort: true,
   },
 });

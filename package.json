@@ -11,6 +11,7 @@
       "clean": "echo 🧹 Cleaning workspace... && rm -rf node_modules apps/*/node_modules packages/*/node_modules && rm -f package-lock.json bun.lockb bun.lock yarn.lock pnpm-lock.yaml && rm -f apps/*/package-lock.json apps/*/bun.lockb apps/*/bun.lock packages/*/package-lock.json packages/*/bun.lockb packages/*/bun.lock && rm -rf .turbo && echo 🧽 Clearing pnpm cache... && pnpm store prune && echo ✅ Clean complete!"
    },
    "devDependencies": {
+      "@types/node": "^24.10.0",
       "@types/wait-on": "^5.3.4",
       "prettier": "^3.6.2",
       "turbo": "^2.5.8",

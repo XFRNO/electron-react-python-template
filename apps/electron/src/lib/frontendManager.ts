@@ -17,7 +17,7 @@ class FrontendManager {
     Logger.log(`🚀 Launching frontend (${isDev ? "dev" : "prod"})`);
 
     const frontendDir = isDev
-      ? path.join(rootPath, "../frontend")
+      ? path.join(rootPath, "/apps/frontend")
       : path.join(process.resourcesPath, "frontend");
 
     // ---- Development mode ----
@@ -30,7 +30,7 @@ class FrontendManager {
       Logger.log(`Starting Vite dev server on port ${frontendPort}...`);
       this.process = processManager.spawn(
         "frontend-dev-server",
-        "npm",
+        "pnpm",
         ["run", "dev"],
         {
           cwd: frontendDir,
