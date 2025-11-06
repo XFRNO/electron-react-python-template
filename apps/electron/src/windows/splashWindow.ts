@@ -40,7 +40,7 @@ export async function createSplashWindow(): Promise<BrowserWindow> {
 
   splashWindow = new BrowserWindow(windowOptions);
 
-  splashWindow.loadFile(path.join(ROOT, "src/windows/splash.html"));
+  splashWindow.loadFile(path.join(ROOT, "src/html/splash.html"));
 
   splashWindow.once("ready-to-show", () => {
     if (splashWindow && !splashWindow.isDestroyed()) {

@@ -1,5 +1,4 @@
 import { app, globalShortcut, BrowserWindow, dialog } from "electron";
-import path from "path";
 import { createSplashWindow, showSplashError } from "./windows/splashWindow";
 import { createMainWindow, loadMainWindowContent } from "./windows/mainWindow";
 import { checkAndShowMainWindow } from "./windows/windowManager";

@@ -4,7 +4,7 @@
    "description": "Python backend for the Electron React Python Template",
    "main": "main.py",
    "scripts": {
-      "dev": "uv run uvicorn src.main:app --host 127.0.0.1 --port 8001 --reload",
+      "dev": "cross-env uv run uvicorn src.main:app --host 127.0.0.1 --port 8000 --reload",
       "build": "uv build",
       "clean": "rimraf build dist __pycache__ .pyinstaller *.spec"
    },

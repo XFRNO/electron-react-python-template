@@ -6,13 +6,14 @@ let mainWindow: BrowserWindow | null = null;
 let isRefreshing = false;
 let contentLoadTimeout: NodeJS.Timeout | null = null;
 
+// Constants
+// @ts-ignore
+import { ROOT } from "../../../../constants";
+
 export async function createMainWindow(
   onContentLoaded: () => void,
   isDev: boolean // Add isDev as an argument
 ): Promise<BrowserWindow> {
-  const ROOT = path.join(__dirname, "../../../");
-  // const isDev = !app.isPackaged; // Remove isDev from here
-
   const windowOptions: Electron.BrowserWindowConstructorOptions = {
     title: "Video Downloader",
     width: 800,
@@ -21,7 +22,7 @@ export async function createMainWindow(
     backgroundColor: "#1a1a1a",
     webPreferences: {
       contextIsolation: true,
-      preload: path.join(ROOT, "electron/src/preload.js"),
+      preload: path.join(ROOT, "electron/src/preload.ts"),
       webSecurity: true,
       nodeIntegration: false,
       sandbox: false,

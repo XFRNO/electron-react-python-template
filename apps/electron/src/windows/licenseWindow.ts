@@ -51,7 +51,7 @@ export async function createLicenseWindow(
   licenseWindow = new BrowserWindow(windowOptions);
 
   const licenseHtmlPath = isDev
-    ? path.join(rootPath, "src/windows/license.html")
+    ? path.join(rootPath, "src/html/license.html")
     : path.join(process.resourcesPath, "license.html");
 
   await licenseWindow.loadFile(licenseHtmlPath);

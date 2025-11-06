@@ -58,7 +58,7 @@ class BackendManager {
 
     // Spawn backend process
     if (isDev) {
-      const backendDir = path.join(rootPath, "../backend");
+      const backendDir = path.join(rootPath, "/apps/backend");
       const processName = "backend-dev-server"; // Define the process name
       processManager.spawn(
         processName, // Pass the name to spawn
@@ -66,7 +66,7 @@ class BackendManager {
         [
           "-m",
           "uvicorn",
-          "main:app",
+          "src.main:app",
           "--host",
           "127.0.0.1",
           "--port",
@@ -125,7 +125,7 @@ class BackendManager {
     let backendExe: string;
 
     if (isDev) {
-      const backendDir = path.join(rootPath, "../backend");
+      const backendDir = path.join(rootPath, "/apps/backend");
       backendExe =
         process.platform === "win32"
           ? path.join(backendDir, ".venv", "Scripts", "python.exe")

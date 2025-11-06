@@ -11,9 +11,7 @@ console.log("[VITE CONFIG LOADED ✅] file:", import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ✅ Force-read the env PORT and log it for debugging
 const envPort = process.env.PORT ? Number(process.env.PORT) : 5173;
-console.log(`[Vite Config] Using port ${envPort}`);
 
 export default defineConfig({
   plugins: [react(), tanstackRouter(), tailwindcss()],
