@@ -8,9 +8,6 @@ import { storeManager } from "../utils/storeManager"; // Import storeManager
  * Sets up API-related IPC handlers
  */
 export function setupApiHandlers(): void {
-  // Use the global storeManager instance
-
-
   // Get ports information
   ipcMain.handle("get-ports", () => {
     const backendPort = storeManager.get("backendPort"); // Use storeManager.get

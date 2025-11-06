@@ -7,7 +7,7 @@ import {
   checkAndShowMainWindow,
 } from "../windows/windowManager";
 import { processManager } from "./processManager";
-// Removed static import of get-port
+import { getAvailablePort } from "../utils/portUtils.js"; // Import the utility function
 import { StoreManager } from "../utils/storeManager";
 
 class BackendManager {
@@ -35,8 +35,7 @@ class BackendManager {
     this.pingAttempts = 0;
 
     // Dynamically get available port
-    const getPort = (await import("get-port")).default; // Dynamically import get-port
-    this.port = Number(process.env.BACKEND_PORT) || (await getPort());
+    this.port = Number(process.env.BACKEND_PORT) || (await getAvailablePort());
     const backendExe = this.getBackendExecutable(isDev, rootPath);
 
     if (!fs.existsSync(backendExe)) {

@@ -12,6 +12,7 @@ import setupGlobalShortcuts from "./lib/setupGlobalShortcuts";
 // Removed static import of get-port
 import { storeManager } from "./utils/storeManager";
 import { Logger } from "./utils/logger";
+import { getAvailablePort } from "./utils/portUtils"; // Import the utility function
 
 // Constants
 // @ts-ignore
@@ -53,8 +54,7 @@ async function createWindow(): Promise<BrowserWindow> {
       loadMainWindowContent(frontendPath, isDev);
 
       // Get a dynamic port for the backend
-      const getPort = (await import("get-port")).default; // Dynamically import get-port
-      backendPort = await getPort();
+      backendPort = await getAvailablePort();
       Logger.log(`Allocated backend port: ${backendPort}`);
       storeManager.set("backendPort", backendPort);
 
@@ -106,8 +106,7 @@ app.whenReady().then(async () => {
     // Get backend port from store or assign a new one
     backendPort = storeManager.get("backendPort");
     if (backendPort === undefined || typeof backendPort !== "number") {
-      const getPort = (await import("get-port")).default; // Dynamically import get-port
-      backendPort = await getPort({ port: 8000 });
+      backendPort = await getAvailablePort();
       storeManager.set("backendPort", backendPort);
     }
 
