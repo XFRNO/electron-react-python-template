@@ -9,10 +9,8 @@ import { licenseManager } from "./lib/licenseManager";
 import { processManager } from "./lib/processManager";
 import { setupIpcHandlers } from "./ipc/index";
 import setupGlobalShortcuts from "./lib/setupGlobalShortcuts";
-// Removed static import of get-port
 import { storeManager } from "./utils/storeManager";
 import { Logger } from "./utils/logger";
-import { getAvailablePort } from "./utils/portUtils"; // Import the utility function
 
 // Constants
 // @ts-ignore
@@ -36,35 +34,17 @@ async function createWindow(): Promise<BrowserWindow> {
   const mainWindow = await createMainWindow(() => {
     // Don't close license window as it might be intentionally shown for license verification
     checkAndShowMainWindow(false);
-  }, isDev); // Pass isDev here
+  }, isDev);
 
   try {
     if (isDev) {
-      // Development mode:
-      // Turborepo orchestrates the Vite dev server and FastAPI backend.
-      // Electron should NOT spawn any servers. It only waits for the dev frontend URL.
       const frontendUrl = await frontendManager.launch(isDev, ROOT);
       loadMainWindowContent(frontendUrl, isDev);
-      // No backend launch in dev mode.
     } else {
       // Production mode:
       // Load built frontend and start the packaged backend executable.
       const frontendPath = await frontendManager.launch(isDev, ROOT);
-      const frontendPort = frontendManager.getPort();
       loadMainWindowContent(frontendPath, isDev);
-
-      // Get a dynamic port for the backend
-      backendPort = await getAvailablePort();
-      Logger.log(`Allocated backend port: ${backendPort}`);
-      storeManager.set("backendPort", backendPort);
-
-      // Start backend in parallel (production only)
-      const frontendUrl = `http://localhost:${frontendPort}`;
-      backendManager
-        .start(isDev, ROOT, frontendUrl, frontendPort!, storeManager)
-        .catch((err) => {
-          Logger.error("Backend startup failed:", err);
-        });
     }
   } catch (error: unknown) {
     Logger.error("Error setting up application:", error);
@@ -103,24 +83,15 @@ app.whenReady().then(async () => {
     Logger.log("Starting app launch sequence");
     await licenseManager.onAppLaunch(createWindow);
 
-    // Get backend port from store or assign a new one
-    backendPort = storeManager.get("backendPort");
-    if (backendPort === undefined || typeof backendPort !== "number") {
-      backendPort = await getAvailablePort();
-      storeManager.set("backendPort", backendPort);
+    const frontendPort = frontendManager.getPort();
+
+    const frontendUrl = `http://localhost:${frontendPort}`;
+    if (frontendManager.IsReady() && !backendManager.IsReady()) {
+      backendManager.start(frontendUrl, frontendPort!).catch((err) => {
+        Logger.error("Backend startup failed:", err);
+      });
     }
 
-    // Start backend in parallel (production only)
-    const frontendUrl = `http://localhost:${backendPort}`;
-    if (typeof backendPort === "number") {
-      backendManager
-        .start(isDev, ROOT, frontendUrl, backendPort, storeManager)
-        .catch((err) => {
-          Logger.error("Backend startup failed:", err);
-        });
-    } else {
-      Logger.error("Invalid backendPort, cannot start backend.");
-    }
     const elapsed = Date.now() - appStartTime;
     Logger.log(`App launch sequence completed (took ${elapsed}ms)`);
   } catch (error: unknown) {

@@ -8,7 +8,7 @@ import {
 } from "../windows/windowManager";
 import { processManager } from "./processManager";
 import { getAvailablePort } from "../utils/portUtils.js"; // Import the utility function
-import { StoreManager } from "../utils/storeManager";
+import { isDev, ROOT } from "../../../../constants";
 
 class BackendManager {
   private port: number | null = null;
@@ -20,13 +20,7 @@ class BackendManager {
   /**
    * Launches backend process
    */
-  public async start(
-    isDev: boolean,
-    rootPath: string,
-    frontendUrl: string,
-    frontendPort: number,
-    storeManager: StoreManager // Add storeManager as an argument
-  ): Promise<void> {
+  public async start(frontendUrl: string, frontendPort: number): Promise<void> {
     Logger.time("Backend Launch");
     Logger.log(`🚀 Starting backend (${isDev ? "development" : "production"})`);
 
@@ -35,8 +29,8 @@ class BackendManager {
     this.pingAttempts = 0;
 
     // Dynamically get available port
-    this.port = Number(process.env.BACKEND_PORT) || (await getAvailablePort());
-    const backendExe = this.getBackendExecutable(isDev, rootPath);
+    this.port = await getAvailablePort();
+    const backendExe = this.getBackendExecutable(isDev, ROOT);
 
     if (!fs.existsSync(backendExe)) {
       const msg = `❌ Backend executable not found at: ${backendExe}`;
@@ -44,7 +38,6 @@ class BackendManager {
       throw new Error(msg);
     }
 
-    const storagePaths = storeManager.getAllPaths();
     const env = {
       ...process.env,
       PYTHONUNBUFFERED: "1",
@@ -57,8 +50,8 @@ class BackendManager {
 
     // Spawn backend process
     if (isDev) {
-      const backendDir = path.join(rootPath, "/apps/backend");
-      const processName = "backend-dev-server"; // Define the process name
+      const backendDir = path.join(ROOT, "/apps/backend");
+      const processName = "backend-dev"; // Define the process name
       processManager.spawn(
         processName, // Pass the name to spawn
         backendExe,
@@ -70,7 +63,6 @@ class BackendManager {
           "127.0.0.1",
           "--port",
           String(this.port),
-          "--reload",
         ],
         {
           cwd: backendDir,
@@ -100,7 +92,7 @@ class BackendManager {
    * Stop backend process safely
    */
   public stop(): void {
-    if (this.processId) {
+    if (this.IsReady() && this.processId) {
       processManager.kill(this.processId);
       Logger.log(`🛑 Backend process stopped`);
       this.processId = null;
@@ -111,6 +103,10 @@ class BackendManager {
     return this.port;
   }
 
+  public IsReady(): boolean {
+    return this.ready;
+  }
+
   public onReady(callback: () => void): void {
     if (this.ready) callback();
     else this.readyCallbacks.push(callback);
@@ -119,12 +115,12 @@ class BackendManager {
   /**
    * Detects backend executable path
    */
-  private getBackendExecutable(isDev: boolean, rootPath: string): string {
+  private getBackendExecutable(isDev: boolean, ROOT: string): string {
     Logger.time("Backend Executable Path");
     let backendExe: string;
 
     if (isDev) {
-      const backendDir = path.join(rootPath, "/apps/backend");
+      const backendDir = path.join(ROOT, "/apps/backend");
       backendExe =
         process.platform === "win32"
           ? path.join(backendDir, ".venv", "Scripts", "python.exe")
@@ -181,17 +177,23 @@ class BackendManager {
   }
 
   private async pingBackend(): Promise<boolean> {
+    if (!this.port) return false;
+
     return new Promise((resolve) => {
       const start = Date.now();
-      const req = http.get(`http://127.0.0.1:${this.port}/health`, (res) => {
-        const ok = res.statusCode === 200;
-        Logger.debug(
-          `Ping ${++this.pingAttempts}: ${ok ? "✅ Ready" : "⏳ Not ready"} (HTTP ${
-            res.statusCode
-          }) ${Date.now() - start}ms`
-        );
-        resolve(ok);
-      });
+      Logger.debug(`Pinging backend on port ${this.port}`); // Add this line
+      const req = http.get(
+        `http://127.0.0.1:${this.port}/api/health/`,
+        (res) => {
+          const ok = res.statusCode === 200;
+          Logger.debug(
+            `Ping ${++this.pingAttempts}: ${ok ? "✅ Ready" : "⏳ Not ready"} (HTTP ${
+              res.statusCode
+            }) ${Date.now() - start}ms`
+          );
+          resolve(ok);
+        }
+      );
 
       req.on("error", () => resolve(false));
       req.setTimeout(1000, () => req.destroy());

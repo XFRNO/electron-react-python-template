@@ -8,6 +8,7 @@ import { getAvailablePort } from "../utils/portUtils";
 class FrontendManager {
   private port: number | null = null;
   private process: any = null; // track spawned process
+  private isReady: boolean = false;
 
   /**
    * Launch frontend in dev or prod mode
@@ -40,6 +41,9 @@ class FrontendManager {
 
       try {
         await waitForResource({ resource: url });
+
+        this.isReady = true;
+
         Logger.log(
           `✅ Frontend dev server running at ${url} (took ${
             Date.now() - startTime
@@ -62,6 +66,7 @@ class FrontendManager {
     }
 
     Logger.log(`✅ Using local production build (${Date.now() - startTime}ms)`);
+    this.isReady = true;
     return prodIndex;
   }
 
@@ -76,6 +81,10 @@ class FrontendManager {
 
   public getPort(): number | null {
     return this.port;
+  }
+
+  public IsReady(): boolean {
+    return this.isReady;
   }
 }
 
