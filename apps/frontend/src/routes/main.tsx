@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { APP_NAME, IS_DEV, test } from "@repo/constants";
 export const Route = createFileRoute("/main")({
   component: MainPage,
 });
@@ -17,6 +18,10 @@ function MainPage() {
       >
         Click me
       </button>
+
+      <h1>{APP_NAME}</h1>
+      <h1>{IS_DEV}</h1>
+      <h1>{test}</h1>
     </div>
   );
 }

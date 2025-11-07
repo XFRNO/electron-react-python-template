@@ -5,7 +5,7 @@
    "main": "dist/main.js",
    "type": "module",
    "scripts": {
-      "dev": "tsc -p tsconfig.json && cross-env NODE_ENV=development electron .",
+      "dev": "tsc -p tsconfig.json && cross-env electron .",
       "start": "electron .",
       "build": "tsc -p tsconfig.json && electron-builder",
       "build:ts": "tsc -p tsconfig.json",

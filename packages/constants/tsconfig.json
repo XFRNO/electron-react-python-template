@@ -4,8 +4,8 @@
   "exclude": ["node_modules"],
   "compilerOptions": {
     "outDir": "dist",
-    "module": "node20",
-    "moduleResolution": "node16",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "declaration": true,
     "emitDeclarationOnly": false,
     "types": ["node"]
