@@ -1,14 +1,14 @@
 import path from "path";
 import fs from "fs";
 import http from "http";
-import { Logger } from "../utils/logger";
+import { Logger } from "../utils/logger.js";
 import {
   setBackendStarted,
   checkAndShowMainWindow,
-} from "../windows/windowManager";
-import { processManager } from "./processManager";
+} from "../windows/windowManager.js";
+import { processManager } from "./processManager.js";
 import { getAvailablePort } from "../utils/portUtils.js"; // Import the utility function
-import { isDev, ROOT } from "../../../../constants";
+import { isDev, ROOT } from "../../../../constants.js";
 
 class BackendManager {
   private port: number | null = null;

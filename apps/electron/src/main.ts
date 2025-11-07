@@ -1,20 +1,23 @@
 import { app, globalShortcut, BrowserWindow, dialog } from "electron";
-import { createSplashWindow, showSplashError } from "./windows/splashWindow";
-import { createMainWindow, loadMainWindowContent } from "./windows/mainWindow";
-import { checkAndShowMainWindow } from "./windows/windowManager";
-import { getMainWindow } from "./windows/mainWindow";
-import { frontendManager } from "./lib/frontendManager";
-import { backendManager } from "./lib/backendManager";
-import { licenseManager } from "./lib/licenseManager";
-import { processManager } from "./lib/processManager";
-import { setupIpcHandlers } from "./ipc/index";
-import setupGlobalShortcuts from "./lib/setupGlobalShortcuts";
-import { storeManager } from "./utils/storeManager";
-import { Logger } from "./utils/logger";
+import { createSplashWindow, showSplashError } from "./windows/splashWindow.js";
+import {
+  createMainWindow,
+  loadMainWindowContent,
+} from "./windows/mainWindow.js";
+import { checkAndShowMainWindow } from "./windows/windowManager.js";
+import { getMainWindow } from "./windows/mainWindow.js";
+import { frontendManager } from "./lib/frontendManager.js";
+import { backendManager } from "./lib/backendManager.js";
+import { licenseManager } from "./lib/licenseManager.js";
+import { processManager } from "./lib/processManager.js";
+import { setupIpcHandlers } from "./ipc/index.js";
+import setupGlobalShortcuts from "./lib/setupGlobalShortcuts.js";
+import { storeManager } from "./utils/storeManager.js";
+import { Logger } from "./utils/logger.js";
 
 // Constants
 // @ts-ignore
-import { isDev, ROOT } from "../../../constants";
+import { isDev, ROOT } from "../../../constants.js";
 
 // Splash screen flag - set to false to disable splash screen
 const SHOW_SPLASH_SCREEN = false;

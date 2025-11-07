@@ -1,5 +1,5 @@
 import waitOn from "wait-on";
-import { Logger } from "./logger";
+import { Logger } from "./logger.js";
 
 /**
  * Waits for a given resource (URL, file, or socket) to become available.

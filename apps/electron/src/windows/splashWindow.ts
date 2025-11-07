@@ -1,6 +1,6 @@
 import { BrowserWindow, app } from "electron";
 import path from "path";
-import { Logger } from "../utils/logger";
+import { Logger } from "../utils/logger.js";
 
 let splashWindow: BrowserWindow | null = null;
 

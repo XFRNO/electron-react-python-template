@@ -1,8 +1,8 @@
 import { BrowserWindow, ipcMain } from "electron";
-import { setupLicenseHandlers } from "./license";
-import { setupApiHandlers } from "./api";
-import { setupSystemHandlers } from "./system";
-import { setupSettingsHandlers } from "./settings";
+import { setupLicenseHandlers } from "./license.js";
+import { setupApiHandlers } from "./api.js";
+import { setupSystemHandlers } from "./system.js";
+import { setupSettingsHandlers } from "./settings.js";
 
 /**
  * Sets up all IPC handlers for the application

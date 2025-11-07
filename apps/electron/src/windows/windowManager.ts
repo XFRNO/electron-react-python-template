@@ -1,7 +1,7 @@
-import { Logger } from "../utils/logger";
-import { showMainWindow, isMainWindowReady } from "./mainWindow";
-import { closeSplashWindow } from "./splashWindow";
-import { closeLicenseWindow } from "./licenseWindow";
+import { Logger } from "../utils/logger.js";
+import { showMainWindow, isMainWindowReady } from "./mainWindow.js";
+import { closeSplashWindow } from "./splashWindow.js";
+import { closeLicenseWindow } from "./licenseWindow.js";
 
 let backendStarted = false;
 let windowShowStartTime: number | null = null;

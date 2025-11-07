@@ -1,6 +1,6 @@
 // src/main/utils/processManager.ts
 import { ChildProcess, spawn } from "child_process";
-import { Logger } from "../utils/logger";
+import { Logger } from "../utils/logger.js";
 
 /**
  * Manages spawned background processes for cleanup and control.

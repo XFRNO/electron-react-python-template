@@ -1,7 +1,7 @@
 import { app } from "electron";
 import path from "path";
-import { Logger } from "./logger";
-import { storeManager } from "./storeManager"; // Import the new storeManager
+import { Logger } from "./logger.js";
+import { storeManager } from "./storeManager.js"; // Import the new storeManager
 
 export interface Settings {
   default_output_path: string;
@@ -150,7 +150,10 @@ class SettingsManager {
 
       for (const key in settings) {
         if (Object.prototype.hasOwnProperty.call(settings, key)) {
-          storeManager.set(key as keyof Settings, settings[key as keyof Settings]);
+          storeManager.set(
+            key as keyof Settings,
+            settings[key as keyof Settings]
+          );
         }
       }
       Logger.log("Multiple settings updated:", settings);

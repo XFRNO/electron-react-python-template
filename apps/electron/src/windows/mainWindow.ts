@@ -1,6 +1,6 @@
 import { BrowserWindow, app } from "electron";
 import path from "path";
-import { Logger } from "../utils/logger";
+import { Logger } from "../utils/logger.js";
 
 let mainWindow: BrowserWindow | null = null;
 let isRefreshing = false;
@@ -8,7 +8,7 @@ let contentLoadTimeout: NodeJS.Timeout | null = null;
 
 // Constants
 // @ts-ignore
-import { ROOT } from "../../../../constants";
+import { ROOT } from "../../../../constants.js";
 
 export async function createMainWindow(
   onContentLoaded: () => void,

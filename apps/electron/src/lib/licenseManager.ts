@@ -1,13 +1,13 @@
 import { BrowserWindow } from "electron";
 import { app } from "electron";
 import https from "https";
-import { Logger } from "../utils/logger";
-import { createLicenseWindow } from "../windows/licenseWindow";
-import { createSplashWindow } from "../windows/splashWindow";
-import { resetWindowManagerState } from "../windows/windowManager";
-import { processManager } from "./processManager";
+import { Logger } from "../utils/logger.js";
+import { createLicenseWindow } from "../windows/licenseWindow.js";
+import { createSplashWindow } from "../windows/splashWindow.js";
+import { resetWindowManagerState } from "../windows/windowManager.js";
+import { processManager } from "./processManager.js";
 import Store from "electron-store";
-import { StoreManager } from "../utils/storeManager";
+import { StoreManager } from "../utils/storeManager.js";
 
 const GUMROAD_PRODUCT_ID = "tbU32GxrR5IQl9j7KXzqRg==";
 

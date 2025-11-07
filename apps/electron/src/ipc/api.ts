@@ -1,8 +1,8 @@
 import { ipcMain } from "electron";
-import { Logger } from "../utils/logger";
-import { backendManager } from "../lib/backendManager";
-import { frontendManager } from "../lib/frontendManager";
-import { storeManager } from "../utils/storeManager"; // Import storeManager
+import { Logger } from "../utils/logger.js";
+import { backendManager } from "../lib/backendManager.js";
+import { frontendManager } from "../lib/frontendManager.js";
+import { storeManager } from "../utils/storeManager.js"; // Import storeManager
 
 /**
  * Sets up API-related IPC handlers

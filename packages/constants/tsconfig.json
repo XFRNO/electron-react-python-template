@@ -1,0 +1,13 @@
+{
+  "extends": "@repo/typescript-config/base.json",
+  "include": ["src"],
+  "exclude": ["node_modules"],
+  "compilerOptions": {
+    "outDir": "dist",
+    "module": "node20",
+    "moduleResolution": "node16",
+    "declaration": true,
+    "emitDeclarationOnly": false,
+    "types": ["node"]
+  }
+}

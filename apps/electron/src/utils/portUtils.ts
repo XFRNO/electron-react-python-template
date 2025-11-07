@@ -1,6 +1,8 @@
-import { Logger } from "./logger";
+import { Logger } from "./logger.js";
 
-export async function getAvailablePort(options?: { port?: number }): Promise<number> {
+export async function getAvailablePort(options?: {
+  port?: number;
+}): Promise<number> {
   try {
     const getPort = (await import("get-port")).default;
     const availablePort = await getPort(options);

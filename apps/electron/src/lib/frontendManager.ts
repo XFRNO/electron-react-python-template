@@ -1,9 +1,9 @@
 import path from "path";
 import fs from "fs";
-import { Logger } from "../utils/logger";
-import { waitForResource } from "../utils/waitOnResource";
-import { processManager } from "./processManager";
-import { getAvailablePort } from "../utils/portUtils";
+import { Logger } from "../utils/logger.js";
+import { waitForResource } from "../utils/waitOnResource.js";
+import { processManager } from "./processManager.js";
+import { getAvailablePort } from "../utils/portUtils.js";
 
 class FrontendManager {
   private port: number | null = null;

@@ -1,6 +1,6 @@
-import { Logger } from "../utils/logger";
+import { Logger } from "../utils/logger.js";
 
-const { app, globalShortcut } = require("electron");
+import { app, globalShortcut } from "electron";
 
 const isDev = !app.isPackaged;
 

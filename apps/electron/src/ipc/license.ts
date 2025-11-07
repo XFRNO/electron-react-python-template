@@ -1,7 +1,7 @@
 import { ipcMain } from "electron";
-import { Logger } from "../utils/logger";
-import { licenseManager } from "../lib/licenseManager";
-import { storeManager } from "../utils/storeManager";
+import { Logger } from "../utils/logger.js";
+import { licenseManager } from "../lib/licenseManager.js";
+import { storeManager } from "../utils/storeManager.js";
 
 /**
  * Sets up license-related IPC handlers
