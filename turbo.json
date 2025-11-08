@@ -31,10 +31,13 @@
       },
       "dev": {
          "dependsOn": [
-            "^dev"
+            "@repo/constants#build"
          ],
          "cache": false,
          "persistent": true
+      },
+      "clean": {
+         "cache": false
       }
    }
 }

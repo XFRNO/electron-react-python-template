@@ -7,6 +7,7 @@
    "scripts": {
       "dev": "tsc -p tsconfig.json && cross-env electron .",
       "start": "electron .",
+      "clean": "rimraf dist node_modules .venv",
       "build": "tsc -p tsconfig.json && electron-builder",
       "build:ts": "tsc -p tsconfig.json",
       "build:electron": "electron-builder",

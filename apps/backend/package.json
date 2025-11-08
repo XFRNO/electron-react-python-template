@@ -6,13 +6,13 @@
    "scripts": {
       "dev": "cross-env uv run uvicorn src.main:app --host 127.0.0.1 --reload",
       "build": "uv build",
-      "clean": "rimraf build dist __pycache__ .pyinstaller *.spec"
+      "clean": "rimraf build dist __pycache__ .pyinstaller *.spec node_modules .venv"
    },
    "keywords": [],
    "author": "",
    "license": "ISC",
    "devDependencies": {
       "cross-env": "^7.0.3",
-      "rimraf": "^5.0.1"
+      "rimraf": "^5.0.10"
    }
 }
