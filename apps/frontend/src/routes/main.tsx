@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { APP_NAME, IS_DEV, test } from "@repo/constants";
+
 export const Route = createFileRoute("/main")({
   component: MainPage,
 });

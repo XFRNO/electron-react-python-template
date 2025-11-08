@@ -1,4 +1,4 @@
-// shared exports (for both browser and node)
+// browser-only exports
 
 export * from "./app.js";
 export * from "./api.js";

@@ -15,7 +15,8 @@ import { setupIpcHandlers } from "./ipc/index.js";
 import setupGlobalShortcuts from "./lib/setupGlobalShortcuts.js";
 import { storeManager } from "./utils/storeManager.js";
 import { Logger } from "./utils/logger.js";
-import { APP_NAME, IS_DEV, resolveFromRoot, ROOTPATH } from "@repo/constants";
+import { APP_NAME, IS_DEV } from "@repo/constants";
+import { resolveFromRoot, ROOTPATH } from "@repo/constants/node";
 
 // @ts-ignore
 import { isDev, ROOT } from "../../../constants.js";
