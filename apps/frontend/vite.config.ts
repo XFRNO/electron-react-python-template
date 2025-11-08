@@ -18,6 +18,10 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "@repo/constants": path.resolve(
+        __dirname,
+        "../../packages/constants/src"
+      ),
     },
   },
   build: {
@@ -57,7 +61,7 @@ export default defineConfig({
   server: {
     // Improve dev server performance
     watch: {
-      ignored: ["**/dist/**", "**/node_modules/**", "@repo/constants"],
+      ignored: ["**/dist/**", "**/node_modules/**"],
     },
     port: envPort,
     strictPort: true,
