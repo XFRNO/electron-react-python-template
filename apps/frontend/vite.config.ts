@@ -50,18 +50,14 @@ export default defineConfig({
   base: "./", // 👈 CRUCIAL for Electron (use relative paths)
   // Optimize dependencies
   optimizeDeps: {
-    include: [
-      "react",
-      "react-dom",
-      "@tanstack/react-router",
-      "@repo/constants",
-    ],
+    include: ["react", "react-dom", "@tanstack/react-router"],
+    exclude: ["@repo/constants"],
   },
   // Server optimizations
   server: {
     // Improve dev server performance
     watch: {
-      ignored: ["**/dist/**", "**/node_modules/**"],
+      ignored: ["**/dist/**", "**/node_modules/**", "@repo/constants"],
     },
     port: envPort,
     strictPort: true,

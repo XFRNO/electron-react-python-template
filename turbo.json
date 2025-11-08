@@ -30,9 +30,6 @@
          ]
       },
       "dev": {
-         "dependsOn": [
-            "@repo/constants#build"
-         ],
          "cache": false,
          "persistent": true
       },
