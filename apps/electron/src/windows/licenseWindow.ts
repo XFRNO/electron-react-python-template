@@ -1,21 +1,22 @@
-import { BrowserWindow } from "electron";
-import path from "path";
-import { Logger } from "../utils/logger.js";
+import { BrowserWindow } from 'electron'
+import path from 'path'
+import { Logger } from '../utils/logger.js'
+import { fileURLToPath } from 'url'
+import { resolveProjectPath } from '../utils/paths.js'
+let licenseWindow: BrowserWindow | null = null
 
-let licenseWindow: BrowserWindow | null = null;
+export const __filename = fileURLToPath(import.meta.url)
+export const __dirname = path.dirname(__filename)
 
-export async function createLicenseWindow(
-  rootPath: string,
-  isDev: boolean
-): Promise<BrowserWindow> {
-  Logger.log("Creating license window");
+export async function createLicenseWindow(isDev: boolean): Promise<BrowserWindow> {
+  Logger.log('Creating license window')
 
   if (licenseWindow) {
-    licenseWindow.close();
-    licenseWindow = null;
+    licenseWindow.close()
+    licenseWindow = null
   }
 
-  const preloadPath = path.join(rootPath, "electron/src/preload.js");
+  const preloadPath = path.join(__dirname, 'src/preload/index.ts')
 
   const windowOptions: Electron.BrowserWindowConstructorOptions = {
     width: 500,
@@ -25,72 +26,65 @@ export async function createLicenseWindow(
     maximizable: false,
     autoHideMenuBar: true,
     show: true,
-    backgroundColor: "#1a1a2e",
+    backgroundColor: '#1a1a2e',
     webPreferences: {
       contextIsolation: true,
       preload: preloadPath,
-      nodeIntegration: false,
-    },
-  };
-
-  if (isDev) {
-    const platform = process.platform;
-    let iconPath;
-
-    if (platform === "darwin") {
-      iconPath = path.join(rootPath, "assets/icon.icns");
-    } else if (platform === "win32") {
-      iconPath = path.join(rootPath, "assets/icon.ico");
-    } else {
-      iconPath = path.join(rootPath, "assets/icon.png");
+      nodeIntegration: false
     }
-
-    windowOptions.icon = iconPath;
   }
 
-  licenseWindow = new BrowserWindow(windowOptions);
+  if (isDev) {
+    const platform = process.platform
+    let iconPath
+
+    if (platform === 'darwin') {
+      iconPath = path.join(__dirname, 'assets/icon.icns')
+    } else if (platform === 'win32') {
+      iconPath = path.join(__dirname, 'assets/icon.ico')
+    } else {
+      iconPath = path.join(__dirname, 'assets/icon.png')
+    }
+
+    windowOptions.icon = iconPath
+  }
+
+  licenseWindow = new BrowserWindow(windowOptions)
 
   const licenseHtmlPath = isDev
-    ? path.join(rootPath, "src/html/license.html")
-    : path.join(process.resourcesPath, "license.html");
+    ? resolveProjectPath('src/renderer/src/license.html')
+    : path.join(process.resourcesPath, 'license.html')
 
-  await licenseWindow.loadFile(licenseHtmlPath);
+  await licenseWindow.loadFile(licenseHtmlPath)
 
-  licenseWindow.once("ready-to-show", () => {
+  licenseWindow.once('ready-to-show', () => {
     if (licenseWindow && !licenseWindow.isDestroyed()) {
-      licenseWindow.show();
+      licenseWindow.show()
     }
-  });
+  })
 
-  licenseWindow.on("closed", () => {
-    licenseWindow = null;
-  });
+  licenseWindow.on('closed', () => {
+    licenseWindow = null
+  })
 
-  licenseWindow.webContents.on(
-    "did-fail-load",
-    (event, errorCode, errorDescription) => {
-      Logger.error(
-        `License window failed to load: ${errorCode} - ${errorDescription}`
-      );
-    }
-  );
+  licenseWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+    Logger.error(`License window failed to load: ${errorCode} - ${errorDescription}`)
+  })
 
-  licenseWindow.webContents.on("render-process-gone", (event, details) => {
-    Logger.error(
-      `License window render process gone: ${JSON.stringify(details)}`
-    );
-  });
+  licenseWindow.webContents.on('render-process-gone', (event, details) => {
+    Logger.error(`License window render process gone: ${JSON.stringify(details)}`)
+  })
 
-  return licenseWindow;
+  return licenseWindow
 }
 
 export function closeLicenseWindow(): void {
   if (licenseWindow && !licenseWindow.isDestroyed()) {
-    licenseWindow.close();
-    licenseWindow = null;
+    licenseWindow.close()
+    licenseWindow = null
   }
 }
 
 export function getLicenseWindow(): BrowserWindow | null {
-  return licenseWindow;
+  return licenseWindow
 }

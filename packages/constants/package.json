@@ -8,23 +8,19 @@
    "scripts": {
       "build": "tsc -p tsconfig.json",
       "dev": "tsc -p tsconfig.json -w",
-      "clean": "rimraf dist node_modules"
+      "clean": "rimraf dist"
    },
    "exports": {
       ".": {
          "import": "./dist/index.js",
-         "require": "./dist/index.cjs"
+         "require": "./dist/index.js"
       },
       "./browser": {
          "import": "./dist/browser.js"
       },
       "./node": {
-         "import": "./dist/node.js",
-         "require": "./dist/node.cjs"
+         "import": "./dist/node.js"
       }
-   },
-   "./browserConstants": {
-      "import": "./dist/browserConstants.js"
    },
    "devDependencies": {
       "@repo/typescript-config": "workspace:*",
