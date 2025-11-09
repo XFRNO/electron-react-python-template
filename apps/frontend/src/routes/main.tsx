@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { APP_NAME, IS_DEV } from "@repo/constants";
+import { APP_NAME, ISDEV } from "@repo/constants";
 
 export const Route = createFileRoute("/main")({
   component: MainPage,
@@ -9,7 +9,7 @@ export const Route = createFileRoute("/main")({
 function MainPage() {
   const [message, setMessage] = useState("Hello from the main page!");
 
-  console.log(IS_DEV);
+  console.log(ISDEV);
   console.log(APP_NAME);
 
   return (
@@ -24,7 +24,7 @@ function MainPage() {
       </button>
 
       <h1>{APP_NAME}</h1>
-      <h1>{IS_DEV}</h1>
+      <h1>{ISDEV}</h1>
     </div>
   );
 }

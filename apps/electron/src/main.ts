@@ -15,7 +15,7 @@ import { setupIpcHandlers } from "./ipc/index.js";
 import setupGlobalShortcuts from "./lib/setupGlobalShortcuts.js";
 import { storeManager } from "./utils/storeManager.js";
 import { Logger } from "./utils/logger.js";
-import { APP_NAME, IS_DEV } from "@repo/constants";
+import { APP_NAME, ISDEV } from "@repo/constants";
 import { resolveFromRoot, ROOTPATH } from "@repo/constants/node";
 
 // @ts-ignore
@@ -24,7 +24,7 @@ import { isDev, ROOT } from "../../../constants.js";
 dotenv.config({ path: resolveFromRoot("./apps/electron/.env") });
 console.log("------------------- electron main.ts -------------------");
 
-console.log("in electron NODE_ENV:", IS_DEV);
+console.log("in electron NODE_ENV:", ISDEV);
 console.log("in electron LOG_LEVEL:", process.env.ELECTRON_LOG_LEVEL);
 console.log("in electron App Name:", APP_NAME);
 
