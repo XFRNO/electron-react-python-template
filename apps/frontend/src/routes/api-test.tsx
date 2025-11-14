@@ -36,7 +36,7 @@ export function ApiTest() {
   };
 
   const handleApiPing = async () => {
-    const result = await fetch("http://127.0.0.1:8001/api/health");
+    const result = await fetch(`${API_BASE_URL}/api/health`);
     const data = await result.json();
     return data;
   };
@@ -82,3 +82,4 @@ export function ApiTest() {
     </div>
   );
 }
+import { API_BASE_URL } from "@repo/constants";

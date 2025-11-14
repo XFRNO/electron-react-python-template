@@ -16,7 +16,7 @@ export default defineConfig({
     resolve: {
       alias: {
         '@repo/constants': path.resolve(__dirname, '../../packages/constants/src'),
-        '@': path.resolve(__dirname, './src'),
+        '@': path.resolve(__dirname, './src')
       }
     }
   },
@@ -29,10 +29,10 @@ export default defineConfig({
         input: path.resolve(__dirname, 'src/preload/index.ts') // ✅ preload entry
       },
       lib: {
-      entry: path.resolve(__dirname, 'src/preload/index.ts'),
-      formats: ['cjs'],       // <-- Force CommonJS output
-      fileName: 'index'       // outputs index.js instead of index.mjs
-    }
+        entry: 'src/preload/index.ts',
+        formats: ['cjs'],
+        fileName: 'index'
+      }
     },
     resolve: {
       alias: {
@@ -46,6 +46,7 @@ export default defineConfig({
       target: 'chrome128',
       outDir: path.resolve(__dirname, 'out/renderer'),
       rollupOptions: {
+        preserveEntrySignatures: 'strict',
         input: {
           main: path.resolve(__dirname, 'src/renderer/src/splash.html'),
           license: path.resolve(__dirname, 'src/renderer/src/license.html')

@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { APP_NAME } from "@repo/constants";
 
 export const Route = createFileRoute("/")({
   component: Home,
@@ -8,9 +9,7 @@ export const Route = createFileRoute("/")({
 function Home() {
   return (
     <div className="flex flex-col justify-center items-center min-h-screen bg-background text-foreground">
-      <h1 className="mb-4 text-3xl font-bold">
-        Electron React Python Template
-      </h1>
+      <h1 className="mb-4 text-3xl font-bold">{APP_NAME}</h1>
       <p className="mb-8 text-lg">
         A template for building desktop applications with Electron, React, and
         Python

@@ -10,7 +10,12 @@ import { processManager } from '../lib/processManager'
 import { setupIpcHandlers } from '../ipc/index'
 import setupGlobalShortcuts from '../lib/setupGlobalShortcuts'
 import { Logger } from '../utils/logger'
-import { IS_SHOW_SPLASH_SCREEN, IS_DEV, ENABLE_LICENSE_GRACE_PERIOD, LICENSE_GRACE_PERIOD_DAYS } from '@repo/constants'
+import {
+  IS_SHOW_SPLASH_SCREEN,
+  IS_DEV,
+  ENABLE_LICENSE_GRACE_PERIOD,
+  LICENSE_GRACE_PERIOD_DAYS
+} from '@repo/constants'
 
 import path from 'path'
 
@@ -68,7 +73,7 @@ app.whenReady().then(async () => {
     }
 
     // Setup IPC handlers
-    setupIpcHandlers(createWindow, IS_DEV)
+    setupIpcHandlers(createWindow)
 
     // Initialize LicenseManager
     licenseManager.init()

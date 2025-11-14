@@ -5,7 +5,7 @@ import { getAssetPath } from '../utils/paths.js'
 
 let splashWindow: BrowserWindow | null = null
 
-const preloadPath = path.join(__dirname, '../preload/index.cjs')
+const preloadPath = path.join(__dirname, '../preload/index.mjs')
 
 export async function createSplashWindow(): Promise<BrowserWindow> {
   const ROOT = path.join(__dirname, '../../../')

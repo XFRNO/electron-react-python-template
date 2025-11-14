@@ -8,14 +8,17 @@
   </head>
   <body>
     <div class="container">
-      <div id="errorContainer"></div>
+      <div id="errorContainer">
+        <h2 id="errorTitle" class="error"></h2>
+        <p id="errorMessage" class="error-message"></p>
+      </div>
       <h1>Video Downloader</h1>
       <p>Please enter your license key to continue:</p>
       <input type="text" id="licenseKey" placeholder="Enter your license key" />
-      <button id="verifyBtn" onclick="verifyLicense()">Verify License</button>
+      <button id="verifyBtn">Verify License</button>
       <p style="font-size: 12px; opacity: 0.7; margin-top: 20px">
         Don't have a license?
-        <a href="#" onclick="openPurchase()" style="color: rgb(28, 156, 240)">Purchase here</a>
+        <a href="#" style="color: rgb(28, 156, 240)">Purchase here</a>
       </p>
       <div class="support-info">
         Need help? Contact support at
@@ -24,6 +27,6 @@
     </div>
 
     <!-- Link to external JavaScript file -->
-    <script src="./license.js"></script>
+    <script type="module" src="./license.ts"></script>
   </body>
 </html>

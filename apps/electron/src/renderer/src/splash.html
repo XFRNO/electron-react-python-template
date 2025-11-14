@@ -81,7 +81,7 @@
   </head>
   <body>
     <div class="container">
-      <h1>Loading Video Downloader</h1>
+      <h1 id="splash-title">Loading…</h1>
       <div class="loader" id="loader"></div>
       <div class="error" id="error-message">
         Failed to start the application. Please try again or contact support.
@@ -106,6 +106,18 @@
           return new Promise((resolve) => setTimeout(resolve, 500)) // Return promise that resolves after fade animation
         }
       }
+
+      ;(async () => {
+        try {
+          if (window.electron && typeof window.electron.getAppInfo === 'function') {
+            const info = await window.electron.getAppInfo()
+            const titleEl = document.getElementById('splash-title')
+            if (titleEl && info?.name) titleEl.textContent = `Loading ${info.name}`
+          }
+        } catch (e) {
+          console.error('Failed to set splash title from app info:', e)
+        }
+      })()
     </script>
   </body>
 </html>

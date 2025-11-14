@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import { Logger } from '../utils/logger';
+import { Logger } from '../utils/logger'
 
-Logger.log('Preload script loaded!')
+Logger.log('🔥 PRELOAD LOADED 🔥')
 
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
@@ -62,7 +62,8 @@ contextBridge.exposeInMainWorld('electron', {
   },
   ping: (): Promise<string> => {
     return ipcRenderer.invoke('ping')
-  }
+  },
+  openExternal: (url: string) => ipcRenderer.send('open-external', url)
 })
 
 declare global {
@@ -89,6 +90,7 @@ declare global {
       updateSettings: (settings: Record<string, any>) => Promise<any>
       onLicenseError: (callback: (errorTitle: string, errorMessage: string) => void) => () => void
       ping: () => Promise<string>
+      openExternal: (url: string) => void
     }
   }
 }

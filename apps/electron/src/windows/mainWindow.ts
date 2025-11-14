@@ -2,7 +2,7 @@ import { BrowserWindow } from 'electron'
 import path from 'path'
 import { Logger } from '../utils/logger.js'
 
-import { IS_DEV } from '@repo/constants'
+import { APP_NAME, IS_DEV } from '@repo/constants'
 
 let mainWindow: BrowserWindow | null = null
 let isRefreshing = false
@@ -13,12 +13,11 @@ const __dirname = path.dirname(__filename)
 
 const ROOTPATH = path.resolve(__dirname, '../../../')
 
-  const preloadPath = path.join(__dirname, '../preload/index.cjs')
-
+const preloadPath = path.join(__dirname, '../preload/index.mjs')
 
 export async function createMainWindow(onContentLoaded: () => void): Promise<BrowserWindow> {
   const windowOptions: Electron.BrowserWindowConstructorOptions = {
-    title: 'Video Downloader',
+    title: APP_NAME,
     width: 800,
     height: 1000,
     show: false,

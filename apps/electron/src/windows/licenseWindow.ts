@@ -1,9 +1,8 @@
 import { BrowserWindow } from 'electron'
 import path from 'path'
-import { Logger } from '../utils/logger.js'
-import { getAssetPath } from '../utils/paths.js'
 
 import { IS_DEV } from '@repo/constants'
+import { Logger } from '../utils/logger.js'
 let licenseWindow: BrowserWindow | null = null
 
 export const __filename = new URL(import.meta.url).pathname
@@ -50,9 +49,9 @@ export async function createLicenseWindow(): Promise<BrowserWindow> {
 
   licenseWindow = new BrowserWindow(windowOptions)
 
-  const licenseHtmlPath = getAssetPath('renderer/src/license.html')
-
+  const licenseHtmlPath = path.join(__dirname, '../renderer/src/license.html')
   await licenseWindow.loadFile(licenseHtmlPath)
+  licenseWindow.webContents.openDevTools({ mode: 'detach' })
 
   licenseWindow.once('ready-to-show', () => {
     if (licenseWindow && !licenseWindow.isDestroyed()) {

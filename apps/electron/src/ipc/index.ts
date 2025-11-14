@@ -1,41 +1,35 @@
-import { BrowserWindow, ipcMain } from "electron";
-import { setupLicenseHandlers } from "./license.js";
-import { setupApiHandlers } from "./api.js";
-import { setupSystemHandlers } from "./system.js";
-import { setupSettingsHandlers } from "./settings.js";
+import { BrowserWindow, ipcMain } from 'electron'
+import { setupLicenseHandlers } from './license.js'
+import { setupApiHandlers } from './api.js'
+import { setupSystemHandlers } from './system.js'
+import { setupSettingsHandlers } from './settings.js'
+import { Logger } from '../utils/logger.js'
+
+Logger.info('Setting up IPC handlers')
 
 /**
  * Sets up all IPC handlers for the application
  * @param createWindow - Function to create main window
- * @param isDev - Development mode flag
  */
-export function setupIpcHandlers(
-  createWindow: () => Promise<BrowserWindow>,
-  isDev: boolean
-): void {
+export function setupIpcHandlers(createWindow: () => Promise<BrowserWindow>): void {
   // Setup license handlers
   setupLicenseHandlers(async () => {
-    await createWindow();
-  });
+    await createWindow()
+  })
 
   // Setup API handlers
-  setupApiHandlers();
+  setupApiHandlers()
 
   // Setup system handlers
-  setupSystemHandlers(isDev, createWindow);
+  setupSystemHandlers(createWindow)
 
   // Setup settings handlers
-  setupSettingsHandlers();
+  setupSettingsHandlers()
 
   // Ping handler
-  ipcMain.handle("ping", async () => {
-    return "pong";
-  });
+  ipcMain.handle('ping', async () => {
+    return 'pong'
+  })
 }
 
-export {
-  setupLicenseHandlers,
-  setupApiHandlers,
-  setupSystemHandlers,
-  setupSettingsHandlers,
-};
+export { setupLicenseHandlers, setupApiHandlers, setupSystemHandlers, setupSettingsHandlers }

@@ -9,7 +9,8 @@ import { storeManager } from '../utils/storeManager.js'
 import {
   GUMROAD_PRODUCT_ID,
   ENABLE_LICENSE_GRACE_PERIOD,
-  LICENSE_GRACE_PERIOD_DAYS
+  LICENSE_GRACE_PERIOD_DAYS,
+  API_TIMEOUT_MS
 } from '@repo/constants'
 
 const ERROR_MESSAGES = {
@@ -508,7 +509,7 @@ class LicenseManager {
           'Content-Type': 'application/json',
           'Content-Length': Buffer.byteLength(postData)
         },
-        timeout: 10000
+        timeout: API_TIMEOUT_MS
       }
       const req = https.request(options, (res) => {
         let data = ''

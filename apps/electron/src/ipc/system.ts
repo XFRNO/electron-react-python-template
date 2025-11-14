@@ -1,14 +1,13 @@
 import { ipcMain, shell, dialog, BrowserWindow, app } from 'electron'
 import { Logger } from '../utils/logger.js'
 import { licenseManager } from '../lib/licenseManager.js' // Changed import to licenseManager
+import { IS_DEV } from '@repo/constants'
 
 /**
  * Sets up system-related IPC handlers
- * @param isDev - Development mode flag
  * @param createWindow - Function to create main window
  */
 export function setupSystemHandlers(
-  isDev: boolean,
   createWindow: () => Promise<BrowserWindow> // Changed return type to Promise<BrowserWindow>
 ): void {
   // Restart app
@@ -40,7 +39,7 @@ export function setupSystemHandlers(
     return {
       name: app.getName(),
       version: app.getVersion(),
-      isDev
+      isDev: IS_DEV
     }
   })
 

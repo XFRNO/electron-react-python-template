@@ -1,4 +1,5 @@
 import { createRootRoute, Link, Outlet } from "@tanstack/react-router";
+import { APP_NAME, APP_VERSION } from "@repo/constants";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/shared/theme-provider";
 
@@ -12,9 +13,7 @@ function RootComponent() {
       <div className="min-h-screen bg-background text-foreground">
         <header className="border-b">
           <div className="container flex justify-between items-center px-4 h-16">
-            <h1 className="text-xl font-bold">
-              Electron React Python Template
-            </h1>
+            <h1 className="text-xl font-bold">{APP_NAME}</h1>
             <nav className="flex space-x-4">
               <Link to="/" className="[&.active]:font-bold">
                 Home
@@ -34,7 +33,7 @@ function RootComponent() {
               <h2 className="mb-2 text-lg font-semibold">Environment Info</h2>
               <div className="p-4 bg-gray-100 rounded-md dark:bg-gray-800">
                 <p>OS: macOS</p>
-                <p>App Version: 1.0.0</p>
+                <p>App Version: {APP_VERSION}</p>
               </div>
             </div>
             <div className="col-span-2">
