@@ -5,14 +5,18 @@ export default defineConfig({
   main: {
     plugins: [externalizeDepsPlugin()],
     build: {
+      target: 'node18',
+      outDir: path.resolve(__dirname, 'out/main'), // ✅ ensure correct output path
+      emptyOutDir: true, // optional, cleans before build
       rollupOptions: {
-        input: path.resolve(__dirname, 'src/main/index.ts') // ✅ main entry
+        input: path.resolve(__dirname, 'src/main/index.ts')
       }
     },
+
     resolve: {
       alias: {
         '@repo/constants': path.resolve(__dirname, '../../packages/constants/src'),
-        '@': path.resolve(__dirname, './src')
+        '@': path.resolve(__dirname, './src'),
       }
     }
   },
@@ -20,6 +24,8 @@ export default defineConfig({
   preload: {
     plugins: [externalizeDepsPlugin()],
     build: {
+      target: 'node18',
+
       rollupOptions: {
         input: path.resolve(__dirname, 'src/preload/index.ts') // ✅ preload entry
       }
@@ -32,6 +38,16 @@ export default defineConfig({
   },
 
   renderer: {
+    build: {
+      target: 'chrome128',
+      outDir: path.resolve(__dirname, 'out/renderer'),
+      rollupOptions: {
+        input: {
+          main: path.resolve(__dirname, 'src/renderer/index.html'),
+          license: path.resolve(__dirname, 'src/renderer/src/license.html')
+        }
+      }
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src/renderer'),

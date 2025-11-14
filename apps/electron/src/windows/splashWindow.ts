@@ -1,6 +1,7 @@
 import { BrowserWindow, app } from "electron";
 import path from "path";
 import { Logger } from "../utils/logger.js";
+import { getAssetPath } from "../utils/paths.js";
 
 let splashWindow: BrowserWindow | null = null;
 
@@ -40,7 +41,7 @@ export async function createSplashWindow(): Promise<BrowserWindow> {
 
   splashWindow = new BrowserWindow(windowOptions);
 
-  splashWindow.loadFile(path.join(ROOT, "src/html/splash.html"));
+  splashWindow.loadFile(getAssetPath("renderer/src/splash.html"));
 
   splashWindow.once("ready-to-show", () => {
     if (splashWindow && !splashWindow.isDestroyed()) {

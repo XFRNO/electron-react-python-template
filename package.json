@@ -2,14 +2,18 @@
    "name": "electron-react-python-template",
    "private": true,
    "version": "1.0.0",
+   "workspaces": [
+      "apps/*",
+      "packages/*"
+   ],
    "scripts": {
       "build": "turbo run build",
       "dev": "turbo run dev --filter=electron",
-      "postinstall": "pnpm --filter backend exec uv sync",
+      "postinstall": "yarn workspace backend exec uv sync",
       "lint": "turbo run lint",
       "format": "prettier --write \"**/*.{ts,tsx,md}\"",
       "check-types": "turbo run check-types",
-      "clean": "turbo run clean && rm -rf node_modules .turbo && pnpm store prune"
+      "clean": "turbo run clean && rm -rf node_modules .turbo"
    },
    "devDependencies": {
       "@types/node": "^24.10.0",
@@ -22,7 +26,7 @@
    "engines": {
       "node": ">=18"
    },
-   "packageManager": "pnpm@10.19.0",
+   "packageManager": "yarn@4.11.0",
    "dependencies": {
       "dotenv": "^17.2.3",
       "get-port": "^7.1.0"

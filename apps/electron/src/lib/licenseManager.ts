@@ -4,9 +4,8 @@ import https from 'https'
 import { Logger } from '../utils/logger.js'
 import { createLicenseWindow } from '../windows/licenseWindow.js'
 import { createSplashWindow } from '../windows/splashWindow.js'
-import { resetWindowManagerState } from '../windows/windowManager.js'
 import { processManager } from './processManager.js'
-import { storeManager } from '../utils/storeManager'
+import { storeManager } from '../utils/storeManager.js'
 
 const GUMROAD_PRODUCT_ID = 'tbU32GxrR5IQl9j7KXzqRg=='
 
@@ -58,30 +57,25 @@ const ERROR_MESSAGES = {
 }
 
 class LicenseManager {
-  private store!: typeof storeManager // Use StoreManager
-  private isDev = false
-  private rootPath = ''
-  private isLicenseValid = false
+  private store!: typeof storeManager
   private licenseWindow: BrowserWindow | null = null
   private mainWindowRef: BrowserWindow | null = null
   private createMainWindow: (() => Promise<BrowserWindow>) | null = null
 
   public init() {
     this.store = storeManager
-    this.isDev = true
-    this.rootPath = app.getPath('userData')
   }
 
   public async onAppLaunch(createMainWindowFunc: () => Promise<BrowserWindow>) {
     this.createMainWindow = createMainWindowFunc
-    const storedLicense = this.store.get('licenseKey') as string // Use store.get
+    const storedLicense = this.store.getLicense().key
 
     if (storedLicense) {
       this.mainWindowRef = await this.createMainWindow()
       try {
         const isValid = await this.verifyStoredLicense(storedLicense)
         if (isValid) {
-          this.isLicenseValid = true
+          this.store.setLicense({ key: storedLicense, isActivated: true, validatedAt: Date.now() })
           this.startBackgroundVerification()
         } else {
           this.showLicenseWindow()
@@ -109,8 +103,7 @@ class LicenseManager {
 
       const isValid = await this.verifyWithGumroad(licenseKey, true)
       if (isValid) {
-        this.isLicenseValid = true
-        this.store.set('licenseKey', licenseKey) // Use store.set
+        this.store.setLicense({ key: licenseKey, isActivated: true, validatedAt: Date.now() }) // Use store.set
       }
       return { success: isValid }
     } catch (error) {
@@ -131,8 +124,8 @@ class LicenseManager {
     try {
       // The processManager.kill method now expects a string name.
       processManager.kill('license-verifier')
-      this.store.delete('licenseKey') // Use store.delete
-      this.isLicenseValid = false
+      // Use store.clearLicense
+      this.store.clearLicense()
       return { success: true }
     } catch (error) {
       return { success: false, error: (error as Error).message }
@@ -140,7 +133,7 @@ class LicenseManager {
   }
 
   public getIsLicenseValid() {
-    return this.isLicenseValid
+    return this.store.getLicense().isActivated
   }
 
   public handleAppActivation() {
@@ -154,7 +147,6 @@ class LicenseManager {
   }
 
   private recreateWindow() {
-    resetWindowManagerState()
     if (this.createMainWindow) {
       createSplashWindow().then(() => {
         this.createMainWindow!()
@@ -163,12 +155,13 @@ class LicenseManager {
   }
 
   private async reverifyLicense() {
-    const storedLicense = this.store.get('licenseKey') as string // Use store.get
+    const storedLicense = this.store.getLicense().key
+
     if (storedLicense) {
       try {
         const isValid = await this.verifyStoredLicense(storedLicense)
         if (isValid) {
-          this.isLicenseValid = true
+          this.store.setLicense({ key: storedLicense, isActivated: true, validatedAt: Date.now() })
           this.recreateWindow()
         } else {
           this.showLicenseWindow()
@@ -191,7 +184,7 @@ class LicenseManager {
       )
       const isValid = await Promise.race([verificationPromise, timeoutPromise])
       if (isValid) {
-        this.isLicenseValid = true
+        this.store.setLicense({ key: licenseKey, isActivated: true, validatedAt: Date.now() })
         return true
       }
     } catch (error) {
@@ -206,7 +199,8 @@ class LicenseManager {
 
     // Register the background verification function with the process manager.
     processManager.register('license-verifier', async () => {
-      const storedLicense = this.store.get('licenseKey') as string // Use store.get
+      const storedLicense = this.store.getLicense().key
+
       if (!storedLicense) return this.handleInvalidLicense('No license key found')
 
       try {
@@ -217,7 +211,7 @@ class LicenseManager {
 
         const isValid = await Promise.race([verificationPromise, timeoutPromise])
         if (isValid) {
-          this.isLicenseValid = true
+          this.store.setLicense({ key: storedLicense, isActivated: true, validatedAt: Date.now() })
           this.notifyMainWindow('license-verified', { valid: true })
         } else {
           this.handleInvalidLicense('Invalid license key')
@@ -252,7 +246,8 @@ class LicenseManager {
       }, 50)
       return
     }
-    this.isLicenseValid = false
+    this.store.clearLicense()
+
     this.notifyMainWindow('license-invalid', { reason })
     setTimeout(() => this.showLicenseWindow(), 5000)
   }
@@ -269,13 +264,13 @@ class LicenseManager {
       this.showLicenseWindow(errorConfig.title, customMessage || errorConfig.message)
       if (shouldQuit) app.quit()
     }, 50)
-    this.isLicenseValid = false
+    this.store.clearLicense()
   }
 
   private async showLicenseWindow(errorTitle?: string, errorMessage?: string) {
     this.closeMainWindow()
     try {
-      this.licenseWindow = await createLicenseWindow(this.rootPath, this.isDev)
+      this.licenseWindow = await createLicenseWindow()
       if (errorTitle && errorMessage && this.licenseWindow) {
         this.licenseWindow.webContents.send('license-error', errorTitle, errorMessage)
       }

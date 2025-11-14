@@ -1,14 +1,15 @@
 import { BrowserWindow } from 'electron'
 import path from 'path'
 import { Logger } from '../utils/logger.js'
-import { fileURLToPath } from 'url'
-import { resolveProjectPath } from '../utils/paths.js'
+
+import { IS_DEV } from '@repo/constants'
+import { getAssetPath } from '../utils/paths.js'
 let licenseWindow: BrowserWindow | null = null
 
-export const __filename = fileURLToPath(import.meta.url)
+export const __filename = new URL(import.meta.url).pathname
 export const __dirname = path.dirname(__filename)
 
-export async function createLicenseWindow(isDev: boolean): Promise<BrowserWindow> {
+export async function createLicenseWindow(): Promise<BrowserWindow> {
   Logger.log('Creating license window')
 
   if (licenseWindow) {
@@ -16,7 +17,7 @@ export async function createLicenseWindow(isDev: boolean): Promise<BrowserWindow
     licenseWindow = null
   }
 
-  const preloadPath = path.join(__dirname, 'src/preload/index.ts')
+  const preloadPath = path.join(__dirname, '../preload/index.js')
 
   const windowOptions: Electron.BrowserWindowConstructorOptions = {
     width: 500,
@@ -34,7 +35,7 @@ export async function createLicenseWindow(isDev: boolean): Promise<BrowserWindow
     }
   }
 
-  if (isDev) {
+  if (IS_DEV) {
     const platform = process.platform
     let iconPath
 
@@ -51,9 +52,7 @@ export async function createLicenseWindow(isDev: boolean): Promise<BrowserWindow
 
   licenseWindow = new BrowserWindow(windowOptions)
 
-  const licenseHtmlPath = isDev
-    ? resolveProjectPath('src/renderer/src/license.html')
-    : path.join(process.resourcesPath, 'license.html')
+  const licenseHtmlPath = getAssetPath('renderer/src/license.html')
 
   await licenseWindow.loadFile(licenseHtmlPath)
 
@@ -67,11 +66,11 @@ export async function createLicenseWindow(isDev: boolean): Promise<BrowserWindow
     licenseWindow = null
   })
 
-  licenseWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+  licenseWindow.webContents.on('did-fail-load', (errorCode, errorDescription) => {
     Logger.error(`License window failed to load: ${errorCode} - ${errorDescription}`)
   })
 
-  licenseWindow.webContents.on('render-process-gone', (event, details) => {
+  licenseWindow.webContents.on('render-process-gone', (details) => {
     Logger.error(`License window render process gone: ${JSON.stringify(details)}`)
   })
 

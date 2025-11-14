@@ -1,117 +1,86 @@
-import { BrowserWindow, app, shell } from 'electron'
+import { BrowserWindow } from 'electron'
 import path from 'path'
 import { Logger } from '../utils/logger.js'
-import { join } from 'path'
-import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import icon from '../../resources/icon.png?asset'
+
+import { IS_DEV } from '@repo/constants'
 
 let mainWindow: BrowserWindow | null = null
 let isRefreshing = false
 let contentLoadTimeout: NodeJS.Timeout | null = null
 
-// import { ROOTPATH } from '@repo/constants' // Constants
+const __filename = new URL(import.meta.url).pathname
+const __dirname = path.dirname(__filename)
 
-// export async function createMainWindow(
-//   onContentLoaded: () => void,
-//   isDev: boolean // Add isDev as an argument
-// ): Promise<BrowserWindow> {
-//   const windowOptions: Electron.BrowserWindowConstructorOptions = {
-//     title: 'Video Downloader',
-//     width: 800,
-//     height: 1000,
-//     show: false,
-//     backgroundColor: '#1a1a1a',
-//     webPreferences: {
-//       contextIsolation: true,
-//       preload: path.join(ROOTPATH, 'electron/src/preload.ts'),
-//       webSecurity: true,
-//       nodeIntegration: false,
-//       sandbox: false,
-//       spellcheck: false
-//     }
-//   }
+const ROOTPATH = path.resolve(__dirname, '../../../')
 
-//   if (isDev) {
-//     const platform = process.platform
-//     let iconPath
-
-//     if (platform === 'darwin') {
-//       iconPath = path.join(ROOTPATH, 'assets/icon.icns')
-//     } else if (platform === 'win32') {
-//       iconPath = path.join(ROOTPATH, 'assets/icon.ico')
-//     } else {
-//       iconPath = path.join(ROOTPATH, 'assets/icon.png')
-//     }
-
-//     windowOptions.icon = iconPath
-//   }
-
-//   mainWindow = new BrowserWindow(windowOptions)
-
-//   setupMainWindowEvents(onContentLoaded, isDev) // Pass isDev to setupMainWindowEvents
-
-//   mainWindow.on('closed', () => {
-//     mainWindow = null
-//     if (contentLoadTimeout) {
-//       clearTimeout(contentLoadTimeout)
-//       contentLoadTimeout = null
-//     }
-//   })
-
-//   mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
-//     Logger.error(`Main window failed to load: ${errorCode} - ${errorDescription}`)
-//   })
-
-//   mainWindow.webContents.on('render-process-gone', (event, details) => {
-//     Logger.error(`Main window render process gone: ${JSON.stringify(details)}`)
-//   })
-
-//   return mainWindow
-// }
-
-export async function createMainWindow() {
-  // Create the browser window.
-  const mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
+export async function createMainWindow(onContentLoaded: () => void): Promise<BrowserWindow> {
+  const windowOptions: Electron.BrowserWindowConstructorOptions = {
+    title: 'Video Downloader',
+    width: 800,
+    height: 1000,
     show: false,
-    autoHideMenuBar: true,
+    backgroundColor: '#1a1a1a',
     webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      contextIsolation: true,
+      preload: path.join(__dirname, '../preload/index.js'),
+      webSecurity: true,
+      nodeIntegration: false,
+      sandbox: false,
+      spellcheck: false
+    }
+  }
+
+  if (IS_DEV) {
+    const platform = process.platform
+    let iconPath: string | null = null
+
+    if (platform === 'darwin') {
+      iconPath = path.join(ROOTPATH, 'assets/icon.icns')
+    } else if (platform === 'win32') {
+      iconPath = path.join(ROOTPATH, 'assets/icon.ico')
+    } else {
+      iconPath = path.join(ROOTPATH, 'assets/icon.png')
+    }
+
+    windowOptions.icon = iconPath
+  }
+
+  mainWindow = new BrowserWindow(windowOptions)
+
+  setupMainWindowEvents(onContentLoaded)
+
+  mainWindow.on('closed', () => {
+    mainWindow = null
+    if (contentLoadTimeout) {
+      clearTimeout(contentLoadTimeout)
+      contentLoadTimeout = null
     }
   })
 
-  mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
+  mainWindow.webContents.on('did-fail-load', (errorCode, errorDescription) => {
+    Logger.error(`Main window failed to load: ${errorCode} - ${errorDescription}`)
   })
 
-  mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
-    return { action: 'deny' }
+  mainWindow.webContents.on('render-process-gone', (details) => {
+    Logger.error(`Main window render process gone: ${JSON.stringify(details)}`)
   })
 
-  // HMR for renderer base on electron-vite cli.
-  // Load the remote URL for development or the local html file for production.
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
-  } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
-  }
+  return mainWindow
 }
 
-function setupMainWindowEvents(onContentLoaded: () => void, isDev: boolean): void {
-  // Add isDev as an argument
+function setupMainWindowEvents(onContentLoaded: () => void): void {
   if (!mainWindow) return
 
+  // Prevents the window from navigating to the same URL, which can cause infinite loading loops
   mainWindow.webContents.on('will-navigate', (event, url) => {
+    event.preventDefault()
     const currentURL = mainWindow!.webContents.getURL()
     if (currentURL && url === currentURL) {
       isRefreshing = true
     }
   })
 
-  if (!isDev) {
+  if (!IS_DEV) {
     contentLoadTimeout = setTimeout(() => {
       if (!isRefreshing && mainWindow && !mainWindow.isDestroyed()) {
         if (onContentLoaded) {
@@ -140,7 +109,7 @@ function setupMainWindowEvents(onContentLoaded: () => void, isDev: boolean): voi
     }
   })
 
-  if (isDev) {
+  if (IS_DEV) {
     contentLoadTimeout = setTimeout(() => {
       if (!isRefreshing && mainWindow && !mainWindow.isDestroyed()) {
         Logger.warn('Content loading timeout (dev mode) - showing window anyway')
@@ -152,10 +121,9 @@ function setupMainWindowEvents(onContentLoaded: () => void, isDev: boolean): voi
   }
 }
 
-export function loadMainWindowContent(urlOrPath: string, isDev: boolean): void {
-  // Add isDev as an argument
+export function loadMainWindowContent(urlOrPath: string): void {
   if (mainWindow && !mainWindow.isDestroyed()) {
-    if (isDev) {
+    if (IS_DEV) {
       mainWindow.loadURL(urlOrPath)
     } else {
       mainWindow.loadFile(urlOrPath)

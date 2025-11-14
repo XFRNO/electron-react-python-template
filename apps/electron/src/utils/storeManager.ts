@@ -1,118 +1,88 @@
-// src/utils/storeManager.ts
-
 import { app } from 'electron'
-import fs from 'fs'
+import Store from 'electron-store'
 import path from 'path'
-import ElectronStorePkg, { type Schema } from 'electron-store' // ✅ ESM import
-import { Logger } from './logger.js'
+import { TStoreSchema, TAppSettings, TUserState, TLicenseData } from '../types.js'
 
-// ElectronStore default export fix
-const ElectronStore = ElectronStorePkg.default
-
-/**
- * Type definition for persistent store data.
- */
-export interface TStoreData {
-  backendPort?: number
-  licenseKey?: string
-  default_output_path?: string
-  default_format?: string
-  default_quality?: string
-}
-
-/**
- * Schema definition for the ElectronStore.
- */
-const schema: Schema<TStoreData> = {
-  backendPort: { type: 'number' },
-  licenseKey: { type: 'string' },
-  default_output_path: { type: 'string' },
-  default_format: { type: 'string' },
-  default_quality: { type: 'string' }
-}
-
-/**
- * Manages app data storage using electron-store.
- * Handles paths, directories, and persistent config values.
- */
 export class StoreManager {
-  public readonly userDataPath: string
-  public readonly cookiesPath: string
-  public readonly downloadsDbPath: string
-  public readonly logsPath: string
-  private store: ElectronStore<TStoreData>
+  private static instance: StoreManager
+  private store: Store<TStoreSchema>
 
-  constructor() {
-    this.userDataPath = app.getPath('userData')
-    this.cookiesPath = path.join(this.userDataPath, 'user-downloaded-cookies.txt')
-    this.downloadsDbPath = path.join(this.userDataPath, 'downloads.db')
-    this.logsPath = path.join(this.userDataPath, 'logs')
+  private constructor() {
+    const downloadsPath = app ? app.getPath('downloads') : path.join(process.cwd(), 'downloads')
 
-    this.ensureDirectories()
-
-    Logger.log('Storage paths initialized:')
-    Logger.log(`  User data directory: ${this.userDataPath}`)
-    Logger.log(`  Cookies path: ${this.cookiesPath}`)
-    Logger.log(`  Downloads DB path: ${this.downloadsDbPath}`)
-    Logger.log(`  Logs directory: ${this.logsPath}`)
-
-    // ✅ Initialize the persistent store
-    this.store = new ElectronStore<TStoreData>({
-      name: 'config',
-      schema,
-      clearInvalidConfig: true
+    this.store = new Store<TStoreSchema>({
+      name: 'store', // creates `store.json` under userData
+      defaults: {
+        appSettings: {
+          theme: 'system',
+          outputFolder: downloadsPath
+        },
+        userState: {
+          onboardingCompleted: false,
+          hideDialogs: {}
+        },
+        license: {
+          key: null,
+          isActivated: false,
+          validatedAt: null
+        }
+      }
     })
   }
 
-  /**
-   * Ensures all necessary directories exist.
-   */
-  private ensureDirectories(): void {
-    for (const dir of [this.userDataPath, this.logsPath]) {
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true })
-        Logger.log(`Created directory: ${dir}`)
-      }
+  public static getInstance(): StoreManager {
+    if (!StoreManager.instance) {
+      StoreManager.instance = new StoreManager()
     }
+    return StoreManager.instance
   }
 
-  // ---------- Path Accessors ----------
-  public getCookiesPath(): string {
-    return this.cookiesPath
+  // ---- App Settings ----
+  getAppSettings(): TAppSettings {
+    return this.store.get('appSettings')
   }
 
-  public getDownloadsDbPath(): string {
-    return this.downloadsDbPath
+  updateAppSettings(partial: Partial<TAppSettings>) {
+    const current = this.getAppSettings()
+    this.store.set('appSettings', { ...current, ...partial })
   }
 
-  public getLogsPath(): string {
-    return this.logsPath
+  // ---- User State ----
+  getUserState(): TUserState {
+    return this.store.get('userState')
   }
 
-  public getAllPaths(): Record<string, string> {
-    return {
-      userDataPath: this.userDataPath,
-      cookiesPath: this.cookiesPath,
-      downloadsDbPath: this.downloadsDbPath,
-      logsPath: this.logsPath
-    }
+  updateUserState(partial: Partial<TUserState>) {
+    const current = this.getUserState()
+    this.store.set('userState', { ...current, ...partial })
   }
 
-  // ---------- Safe Typed Store Methods ----------
-  public get<K extends keyof TStoreData>(key: K): TStoreData[K] | undefined {
-    return this.store.get(key)
+  // ---- License ----
+  // getLicense returns the license data from the store
+  getLicense(): TLicenseData {
+    return this.store.get('license')
   }
 
-  public set<K extends keyof TStoreData>(key: K, value: TStoreData[K]): void {
-    this.store.set(key, value)
+  // setLicense sets the license data in the store
+  setLicense(partial: Partial<TLicenseData>) {
+    const current = this.getLicense()
+    this.store.set('license', { ...current, ...partial })
   }
 
-  public delete<K extends keyof TStoreData>(key: K): void {
-    this.store.delete(key)
+  // clearLicense clears the license data from the store
+  clearLicense() {
+    this.setLicense({
+      key: null,
+      isActivated: false,
+      validatedAt: null
+    })
+  }
+  // ---- License ----
+
+  // ---- General Utility ----
+  clearAll() {
+    this.store.clear()
   }
 }
 
-/**
- * Singleton instance of the StoreManager.
- */
-export const storeManager = new StoreManager()
+export const storeManager = StoreManager.getInstance()

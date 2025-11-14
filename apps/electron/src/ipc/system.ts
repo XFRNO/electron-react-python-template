@@ -1,7 +1,6 @@
-import { ipcMain, shell, dialog, BrowserWindow, app } from "electron";
-import { Logger } from "../utils/logger.js";
-import { resetWindowManagerState } from "../windows/windowManager.js";
-import { licenseManager } from "../lib/licenseManager.js"; // Changed import to licenseManager
+import { ipcMain, shell, dialog, BrowserWindow, app } from 'electron'
+import { Logger } from '../utils/logger.js'
+import { licenseManager } from '../lib/licenseManager.js' // Changed import to licenseManager
 
 /**
  * Sets up system-related IPC handlers
@@ -13,67 +12,64 @@ export function setupSystemHandlers(
   createWindow: () => Promise<BrowserWindow> // Changed return type to Promise<BrowserWindow>
 ): void {
   // Restart app
-  ipcMain.handle("restart-app", async () => {
+  ipcMain.handle('restart-app', async () => {
     try {
       // Close all windows
       BrowserWindow.getAllWindows().forEach((window) => {
-        window.close();
-      });
+        window.close()
+      })
 
       // Reset license manager state
-      await licenseManager.clearLicense(); // Changed to call clearLicense method
-
-      // Reset window manager state
-      resetWindowManagerState();
+      await licenseManager.clearLicense() // Changed to call clearLicense method
 
       // Re-launch the app flow
       // Removed invalid dynamic import for onAppLaunch
       setImmediate(() => {
-        licenseManager.onAppLaunch(createWindow); // Call onAppLaunch via existing licenseManager instance
-      });
+        licenseManager.onAppLaunch(createWindow) // Call onAppLaunch via existing licenseManager instance
+      })
 
-      return { success: true };
+      return { success: true }
     } catch (error) {
-      Logger.error("Error restarting app:", error);
-      return { success: false, error: (error as Error).message };
+      Logger.error('Error restarting app:', error)
+      return { success: false, error: (error as Error).message }
     }
-  });
+  })
 
   // Get app info
-  ipcMain.handle("get-app-info", () => {
+  ipcMain.handle('get-app-info', () => {
     return {
       name: app.getName(),
       version: app.getVersion(),
-      isDev,
-    };
-  });
+      isDev
+    }
+  })
 
   // Show item in folder
-  ipcMain.handle("show-item-in-folder", async (event, filePath: string) => {
+  ipcMain.handle('show-item-in-folder', async (_event, filePath: string) => {
     try {
-      shell.showItemInFolder(filePath);
-      return { success: true };
+      shell.showItemInFolder(filePath)
+      return { success: true }
     } catch (error) {
-      Logger.error("Error showing item in folder:", error);
-      return { success: false, error: (error as Error).message };
+      Logger.error('Error showing item in folder:', error)
+      return { success: false, error: (error as Error).message }
     }
-  });
+  })
 
   // Select output folder
-  ipcMain.handle("select-output-folder", async () => {
+  ipcMain.handle('select-output-folder', async () => {
     try {
       const result = await dialog.showOpenDialog({
-        properties: ["openDirectory"],
-      });
+        properties: ['openDirectory']
+      })
 
       if (result.canceled) {
-        return { success: false, error: "User canceled folder selection" };
+        return { success: false, error: 'User canceled folder selection' }
       }
 
-      return { success: true, path: result.filePaths[0] };
+      return { success: true, path: result.filePaths[0] }
     } catch (error) {
-      Logger.error("Error selecting output folder:", error);
-      return { success: false, error: (error as Error).message };
+      Logger.error('Error selecting output folder:', error)
+      return { success: false, error: (error as Error).message }
     }
-  });
+  })
 }

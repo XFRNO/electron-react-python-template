@@ -1,9 +1,10 @@
 {
-   "name": "my-app",
+   "name": "electron",
    "version": "1.0.0",
    "description": "A minimal Electron application with TypeScript",
    "main": "./out/main/index.js",
    "author": "example.com",
+   "type": "module",
    "homepage": "https://electron-vite.org",
    "scripts": {
       "format": "prettier --write .",
@@ -14,6 +15,7 @@
       "start": "electron-vite preview",
       "dev": "electron-vite dev",
       "build": "npm run typecheck && electron-vite build",
+      "clean": "rimraf dist node_modules .venv",
       "postinstall": "electron-builder install-app-deps",
       "build:unpack": "npm run build && electron-builder --dir",
       "build:win": "npm run build && electron-builder --win",
@@ -23,28 +25,23 @@
    "dependencies": {
       "@electron-toolkit/preload": "^3.0.2",
       "@electron-toolkit/utils": "^4.0.0",
+      "@repo/constants": "workspace:*",
       "electron-store": "^11.0.2",
       "electron-updater": "^6.3.9",
-      "wait-on": "^9.0.3",
-      "@repo/constants": "workspace:*"
+      "wait-on": "^9.0.3"
    },
    "devDependencies": {
       "@electron-toolkit/eslint-config-prettier": "^3.0.0",
       "@electron-toolkit/eslint-config-ts": "^3.1.0",
       "@electron-toolkit/tsconfig": "^2.0.0",
       "@types/node": "^22.18.6",
-      "electron": "^38.1.2",
+      "electron": "^39.1.2",
       "electron-builder": "^25.1.8",
       "electron-vite": "^4.0.1",
       "eslint": "^9.36.0",
+      "get-port": "^7.1.0",
       "prettier": "^3.6.2",
       "typescript": "^5.9.2",
       "vite": "^7.1.6"
-   },
-   "pnpm": {
-      "onlyBuiltDependencies": [
-         "electron",
-         "esbuild"
-      ]
    }
 }

@@ -1,14 +1,18 @@
 import path from 'path'
-import { fileURLToPath } from 'url'
 
-// Dev-safe __dirname
-export const __filename = fileURLToPath(import.meta.url)
-export const __dirname = path.dirname(__filename)
+import { IS_DEV } from '@repo/constants'
+
+const __filename = new URL(import.meta.url).pathname
+const __dirname = path.dirname(__filename)
 
 /**
- * Resolves a file path relative to the project's root
+ * Resolve a file path relative to the correct base (src in dev, out/main in prod)
  */
-export function resolveProjectPath(...segments: string[]): string {
-  // go back from out/main to project root
-  return path.join(__dirname, '../../', ...segments)
+export function getAssetPath(...segments: string[]): string {
+  if (IS_DEV) {
+    return path.join(__dirname, '..', ...segments)
+  } else {
+    // In production, resourcesPath contains packaged assets
+    return path.join(process.resourcesPath, ...segments)
+  }
 }

@@ -1,91 +1,92 @@
-import path from "path";
-import fs from "fs";
-import { Logger } from "../utils/logger.js";
-import { waitForResource } from "../utils/waitOnResource.js";
-import { processManager } from "./processManager.js";
-import { getAvailablePort } from "../utils/portUtils.js";
+import path from 'path'
+import fs from 'fs'
+import { Logger } from '../utils/logger.js'
+import { waitForResource } from '../utils/waitOnResource.js'
+import { processManager } from './processManager.js'
+import { getAvailablePort } from '../utils/portUtils.js'
+import { IS_DEV } from '@repo/constants'
+
+
+const __filename = new URL(import.meta.url).pathname
+const __dirname = path.dirname(__filename)
+
+const ROOTPATH = path.resolve(__dirname, '../../../')
 
 class FrontendManager {
-  private port: number | null = null;
-  private process: any = null; // track spawned process
-  private isReady: boolean = false;
+  private port: number | null = null
+  private processId: string | null = null
+  private isReady: boolean = false
 
   /**
    * Launch frontend in dev or prod mode
    */
-  public async launch(isDev: boolean, rootPath: string): Promise<string> {
-    const startTime = Date.now();
-    Logger.log(`🚀 Launching frontend (${isDev ? "dev" : "prod"})`);
+  public async launch(): Promise<string> {
+    const startTime = Date.now()
+    Logger.log(`🚀 Launching frontend (${IS_DEV ? 'dev' : 'prod'})`)
 
-    const frontendDir = isDev
-      ? path.join(rootPath, "/apps/frontend")
-      : path.join(process.resourcesPath, "frontend");
+    const frontendDir = IS_DEV
+      ? path.join(ROOTPATH, '/apps/frontend')
+      : path.join(process.resourcesPath, 'frontend')
 
     // ---- Development mode ----
-    if (isDev) {
-      const frontendPort = await getAvailablePort();
-      const url = `http://localhost:${frontendPort}`;
-      this.port = frontendPort;
+    if (IS_DEV) {
+      const frontendPort = await getAvailablePort()
+      const url = `http://localhost:${frontendPort}`
+      this.port = frontendPort
+      const processName = 'frontend-dev-server'
 
       // Spawn Vite dev server
-      Logger.log(`Starting Vite dev server on port ${frontendPort}...`);
-      this.process = processManager.spawn(
-        "frontend-dev-server",
-        "pnpm",
-        ["run", "dev"],
-        {
-          cwd: frontendDir,
-          env: { ...process.env, PORT: frontendPort.toString() },
-        }
-      );
+      Logger.log(`Starting Vite dev server on port ${frontendPort}...`)
+      processManager.spawn(processName, 'pnpm', ['run', 'dev'], {
+        cwd: frontendDir,
+        env: { ...process.env, PORT: frontendPort.toString() }
+      })
+
+      this.processId = processName // Store process ID for later termination
 
       try {
-        await waitForResource({ resource: url });
+        await waitForResource({ resource: url })
 
-        this.isReady = true;
+        this.isReady = true
 
-        Logger.log(
-          `✅ Frontend dev server running at ${url} (took ${
-            Date.now() - startTime
-          }ms)`
-        );
-        return url;
+        Logger.log(`✅ Frontend dev server running at ${url} (took ${Date.now() - startTime}ms)`)
+        return url
       } catch (err) {
-        Logger.error(
-          `❌ Frontend dev server not reachable at ${url}: ${(err as Error).message}`
-        );
-        this.kill();
-        throw err;
+        Logger.error(`❌ Frontend dev server not reachable at ${url}: ${(err as Error).message}`)
+        this.stop()
+        throw err
       }
     }
 
     // ---- Production mode ----
-    const prodIndex = path.join(frontendDir, "index.html");
+    const prodIndex = path.join(frontendDir, 'index.html')
     if (!fs.existsSync(prodIndex)) {
-      throw new Error(`❌ Production frontend not found at ${prodIndex}`);
+      throw new Error(`❌ Production frontend not found at ${prodIndex}`)
     }
 
-    Logger.log(`✅ Using local production build (${Date.now() - startTime}ms)`);
-    this.isReady = true;
-    return prodIndex;
+    Logger.log(`✅ Using local production build (${Date.now() - startTime}ms)`)
+    this.isReady = true
+    return prodIndex
   }
 
   /**
    * Cleanly stops the frontend dev server
    */
-  public kill(): void {
+  public stop(): void {
     // Use the processManager to kill the frontend dev server by its registered name.
-    processManager.kill("frontend-dev-server");
-    this.process = null; // Clear the local reference
+    if (this.processId) {
+      processManager.kill(this.processId)
+      this.processId = null // Clear the reference after termination
+    }
   }
 
   public getPort(): number | null {
-    return this.port;
+    return this.port
   }
 
   public IsReady(): boolean {
-    return this.isReady;
+    return this.isReady
   }
 }
 
-export const frontendManager = new FrontendManager();
+export const frontendManager = new FrontendManager()

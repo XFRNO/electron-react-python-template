@@ -2,18 +2,13 @@ import path from 'path'
 import fs from 'fs'
 import http from 'http'
 import { Logger } from '../utils/logger.js'
-import { setBackendStarted, checkAndShowMainWindow } from '../windows/windowManager.js'
 import { processManager } from './processManager.js'
 import { getAvailablePort } from '../utils/portUtils.js' // Import the utility function
-import { fileURLToPath } from 'url'
-import { ISDEV } from '@repo/constants'
 
-// -----------------------------
-// Polyfill __filename / __dirname for ESM
-const __filename = fileURLToPath(import.meta.url)
+import { IS_DEV } from '@repo/constants'
+
+const __filename = new URL(import.meta.url).pathname
 const __dirname = path.dirname(__filename)
-
-// Compute ROOTPATH locally
 const ROOTPATH = path.resolve(__dirname, '../../../')
 
 class BackendManager {
@@ -28,7 +23,7 @@ class BackendManager {
    */
   public async start(frontendUrl: string, frontendPort: number): Promise<void> {
     Logger.time('Backend Launch')
-    Logger.log(`🚀 Starting backend (${ISDEV ? 'development' : 'production'})`)
+    Logger.log(`🚀 Starting backend (${IS_DEV ? 'development' : 'production'})`)
 
     this.ready = false
     this.readyCallbacks = []
@@ -36,7 +31,7 @@ class BackendManager {
 
     // Dynamically get available port
     this.port = await getAvailablePort()
-    const backendExe = this.getBackendExecutable(ISDEV, ROOTPATH)
+    const backendExe = this.getBackendExecutable()
 
     if (!fs.existsSync(backendExe)) {
       const msg = `❌ Backend executable not found at: ${backendExe}`
@@ -55,9 +50,11 @@ class BackendManager {
     Logger.log(`Backend starting on port ${this.port}`)
 
     // Spawn backend process
-    if (ISDEV) {
+    // Development mode
+    if (IS_DEV) {
       const backendDir = path.join(ROOTPATH, '/apps/backend')
       const processName = 'backend-dev' // Define the process name
+
       processManager.spawn(
         processName, // Pass the name to spawn
         backendExe,
@@ -68,7 +65,9 @@ class BackendManager {
         }
       )
       this.processId = processName // Assign the name to this.processId
-    } else {
+    }
+    // Production mode
+    else {
       const processName = 'backend-production' // Define the process name
       processManager.spawn(
         processName, // Pass the name to spawn
@@ -87,10 +86,10 @@ class BackendManager {
   }
 
   /**
-   * Stop backend process safely
+   * Cleanly stops the backend process
    */
-  public stop(): void {
-    if (this.IsReady() && this.processId) {
+  public kill(): void {
+    if (this.processId) {
       processManager.kill(this.processId)
       Logger.log(`🛑 Backend process stopped`)
       this.processId = null
@@ -113,17 +112,20 @@ class BackendManager {
   /**
    * Detects backend executable path
    */
-  private getBackendExecutable(ISDEV: boolean, ROOTPATH: string): string {
+  private getBackendExecutable(): string {
     Logger.time('Backend Executable Path')
     let backendExe: string
 
-    if (ISDEV) {
+    // Development mode
+    if (IS_DEV) {
       const backendDir = path.join(ROOTPATH, '/apps/backend')
       backendExe =
         process.platform === 'win32'
           ? path.join(backendDir, '.venv', 'Scripts', 'python.exe')
           : path.join(backendDir, '.venv', 'bin', 'python3')
-    } else {
+    }
+    // Production mode
+    else {
       const base = path.join(process.resourcesPath, 'backend', 'backend_main')
       const oneDir =
         process.platform === 'win32' ? `${base}\\backend_main.exe` : `${base}/backend_main`
@@ -148,7 +150,6 @@ class BackendManager {
   private async waitForBackendReady(): Promise<void> {
     const start = Date.now()
     Logger.log(`Waiting for backend on port ${this.port}...`)
-    checkAndShowMainWindow(false)
 
     while (!this.ready) {
       const isReady = await this.pingBackend()
@@ -157,7 +158,6 @@ class BackendManager {
         Logger.log(`✅ Backend ready after ${Date.now() - start}ms`)
         this.readyCallbacks.forEach((cb) => cb())
         this.readyCallbacks = []
-        setBackendStarted(true)
         Logger.timeEnd('Backend Launch')
         return
       }
