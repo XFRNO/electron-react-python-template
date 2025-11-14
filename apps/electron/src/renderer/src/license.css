@@ -1,0 +1,124 @@
+/*
+ * This CSS file contains styles for the license verification page.
+ * It was extracted from the inline <style> block in license.html
+ * to improve maintainability and separation of concerns.
+ */
+body {
+  margin: 0;
+  padding: 40px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: rgb(0, 0, 0);
+  color: rgb(231, 233, 234);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+.container {
+  background: rgb(23, 24, 28);
+  padding: 30px;
+  border-radius: 12px;
+  text-align: center;
+  max-width: 400px;
+  width: 100%;
+  box-shadow:
+    0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0),
+    0px 4px 6px -1px hsl(202.8169 89.1213% 53.1373% / 0);
+}
+h1 {
+  margin-bottom: 20px;
+  color: rgb(28, 156, 240);
+}
+input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border: 1px solid rgb(22, 30, 37);
+  border-radius: 6px;
+  background: rgb(0, 0, 0);
+  color: rgb(231, 233, 234);
+  font-size: 14px;
+  box-sizing: border-box;
+  transition: border 0.3s;
+}
+textarea:focus,
+input:focus {
+  outline: none;
+  border: 1px solid white;
+}
+button {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border: none;
+  border-radius: 6px;
+  background: rgb(28, 156, 240);
+  color: rgb(255, 255, 255);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+button:hover {
+  background: rgb(6, 22, 34);
+  color: rgb(28, 156, 240);
+}
+button:disabled {
+  background: rgb(24, 24, 24);
+  color: rgb(114, 118, 122);
+  cursor: not-allowed;
+}
+.error {
+  color: rgb(244, 33, 46);
+  margin-top: 10px;
+  font-size: 12px;
+}
+.success {
+  color: rgb(0, 184, 122);
+  margin-top: 10px;
+  font-size: 12px;
+}
+.details {
+  color: rgb(114, 118, 122);
+  font-size: 11px;
+  margin-top: 5px;
+  text-align: left;
+  background: rgb(24, 24, 24);
+  padding: 8px;
+  border-radius: 4px;
+  white-space: pre-wrap;
+}
+.error-display {
+  background: rgba(244, 33, 46, 0.1);
+  border: 1px solid rgb(244, 33, 46);
+  border-radius: 6px;
+  padding: 15px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+.error-display p {
+  color: rgb(244, 33, 46);
+  margin: 0;
+  font-size: 14px;
+}
+.error-message {
+  color: rgb(244, 33, 46);
+  margin: 0 0 15px 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+.support-info {
+  font-size: 12px;
+  opacity: 0.7;
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.support-email {
+  color: rgb(28, 156, 240);
+  text-decoration: none;
+}
+.support-email:hover {
+  text-decoration: underline;
+}

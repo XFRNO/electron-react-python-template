@@ -47,7 +47,7 @@ export default defineConfig({
       outDir: path.resolve(__dirname, 'out/renderer'),
       rollupOptions: {
         input: {
-          main: path.resolve(__dirname, 'src/renderer/index.html'),
+          main: path.resolve(__dirname, 'src/renderer/src/splash.html'),
           license: path.resolve(__dirname, 'src/renderer/src/license.html')
         }
       }
