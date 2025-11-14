@@ -6,8 +6,11 @@ import { createLicenseWindow } from '../windows/licenseWindow.js'
 import { createSplashWindow } from '../windows/splashWindow.js'
 import { processManager } from './processManager.js'
 import { storeManager } from '../utils/storeManager.js'
-
-const GUMROAD_PRODUCT_ID = 'tbU32GxrR5IQl9j7KXzqRg=='
+import {
+  GUMROAD_PRODUCT_ID,
+  ENABLE_LICENSE_GRACE_PERIOD,
+  LICENSE_GRACE_PERIOD_DAYS
+} from '@repo/constants'
 
 const ERROR_MESSAGES = {
   transfer: {
@@ -61,9 +64,105 @@ class LicenseManager {
   private licenseWindow: BrowserWindow | null = null
   private mainWindowRef: BrowserWindow | null = null
   private createMainWindow: (() => Promise<BrowserWindow>) | null = null
+  private graceConfig: { enabled: boolean; days: number } = {
+    enabled: ENABLE_LICENSE_GRACE_PERIOD,
+    days: LICENSE_GRACE_PERIOD_DAYS
+  }
 
   public init() {
     this.store = storeManager
+  }
+
+  /**
+   * Update grace period configuration at runtime.
+   */
+  public setGracePeriodConfig(config: Partial<{ enabled: boolean; days: number }>) {
+    if (typeof config.enabled === 'boolean') {
+      this.graceConfig.enabled = config.enabled
+    }
+    if (typeof config.days === 'number') {
+      this.graceConfig.days =
+        Number.isFinite(config.days) && config.days >= 0
+          ? Math.floor(config.days)
+          : this.graceConfig.days
+    }
+  }
+
+  private getGraceStart(): number | null {
+    try {
+      const lic: any = this.store.getLicense()
+      return typeof lic.graceStartAt === 'number' ? lic.graceStartAt : null
+    } catch {
+      return null
+    }
+  }
+
+  private setGraceStart(ts: number | null) {
+    try {
+      const lic: any = this.store.getLicense()
+      const next = {
+        key: lic.key || '',
+        isActivated: ts == null ? !!lic.isActivated : true,
+        validatedAt: lic.validatedAt || Date.now(),
+        graceStartAt: ts,
+        underGrace: ts != null
+      }
+      this.store.setLicense(next)
+    } catch (error) {
+      Logger.error(`Failed to persist grace start: ${(error as Error).message}`)
+    }
+  }
+
+  private isGraceEnabled() {
+    return !!this.graceConfig.enabled && this.graceConfig.days > 0
+  }
+
+  private isWithinGracePeriod(): boolean {
+    const start = this.getGraceStart()
+    if (!this.isGraceEnabled() || start == null) return false
+    const now = Date.now()
+    const ms = now - start
+    if (ms < 0 || !Number.isFinite(ms)) {
+      Logger.error(
+        'Grace period calculation error: negative or invalid timestamp; resetting grace start'
+      )
+      this.setGraceStart(now)
+      return true
+    }
+    const daysElapsed = ms / (1000 * 60 * 60 * 24)
+    return daysElapsed <= this.graceConfig.days
+  }
+
+  private clearGrace() {
+    const lic: any = this.store.getLicense()
+    this.store.setLicense({
+      key: lic.key || '',
+      isActivated: true,
+      validatedAt: Date.now(),
+      graceStartAt: null,
+      underGrace: false
+    })
+  }
+
+  private handleGraceOrRestrict(reason: string) {
+    if (this.isGraceEnabled()) {
+      if (this.getGraceStart() == null) this.setGraceStart(Date.now())
+      if (this.isWithinGracePeriod()) {
+        Logger.log(`Grace period active due to: ${reason}`)
+        this.notifyMainWindow('license-grace-active', {
+          remainingDays: Math.max(
+            0,
+            this.graceConfig.days -
+              (Date.now() - (this.getGraceStart() || Date.now())) / (1000 * 60 * 60 * 24)
+          )
+        })
+        return
+      }
+    }
+    this.showLicenseWindow(
+      ERROR_MESSAGES.verificationFailed.title,
+      ERROR_MESSAGES.verificationFailed.message
+    )
   }
 
   public async onAppLaunch(createMainWindowFunc: () => Promise<BrowserWindow>) {
@@ -76,12 +175,15 @@ class LicenseManager {
         const isValid = await this.verifyStoredLicense(storedLicense)
         if (isValid) {
           this.store.setLicense({ key: storedLicense, isActivated: true, validatedAt: Date.now() })
+          this.clearGrace()
           this.startBackgroundVerification()
         } else {
-          this.showLicenseWindow()
+          this.handleGraceOrRestrict('Invalid stored license')
         }
       } catch (error) {
-        this.handleLicenseError(error as Error, false)
+        const err = error as Error
+        Logger.error(`Stored license verification error: ${err.message}`)
+        this.handleGraceOrRestrict(err.message)
       }
     } else {
       this.showLicenseWindow()
@@ -104,6 +206,7 @@ class LicenseManager {
       const isValid = await this.verifyWithGumroad(licenseKey, true)
       if (isValid) {
         this.store.setLicense({ key: licenseKey, isActivated: true, validatedAt: Date.now() }) // Use store.set
+        this.clearGrace()
       }
       return { success: isValid }
     } catch (error) {
@@ -188,7 +291,11 @@ class LicenseManager {
         return true
       }
     } catch (error) {
-      this.handleLicenseError(error as Error, false)
+      if (this.isGraceEnabled()) {
+        this.handleGraceOrRestrict((error as Error).message)
+      } else {
+        this.handleLicenseError(error as Error, false)
+      }
     }
     return false
   }
@@ -212,13 +319,34 @@ class LicenseManager {
         const isValid = await Promise.race([verificationPromise, timeoutPromise])
         if (isValid) {
           this.store.setLicense({ key: storedLicense, isActivated: true, validatedAt: Date.now() })
+          this.clearGrace()
           this.notifyMainWindow('license-verified', { valid: true })
         } else {
-          this.handleInvalidLicense('Invalid license key')
+          if (this.isWithinGracePeriod()) {
+            this.notifyMainWindow('license-grace-active', {
+              remainingDays: Math.max(
+                0,
+                this.graceConfig.days -
+                  (Date.now() - (this.getGraceStart() || Date.now())) / (1000 * 60 * 60 * 24)
+              )
+            })
+          } else {
+            this.handleInvalidLicense('Invalid license key')
+          }
         }
       } catch (error) {
         Logger.error(`License verification failed: ${(error as Error).message}`)
-        this.handleLicenseError(error as Error, false)
+        if (this.isWithinGracePeriod()) {
+          this.notifyMainWindow('license-grace-active', {
+            remainingDays: Math.max(
+              0,
+              this.graceConfig.days -
+                (Date.now() - (this.getGraceStart() || Date.now())) / (1000 * 60 * 60 * 24)
+            )
+          })
+        } else {
+          this.handleLicenseError(error as Error, false)
+        }
       }
     })
 
@@ -227,6 +355,25 @@ class LicenseManager {
   }
 
   private handleInvalidLicense(reason: string) {
+    if (this.isWithinGracePeriod()) {
+      Logger.log(`Grace period active; deferring restriction: ${reason}`)
+      const lic = this.store.getLicense()
+      this.store.setLicense({
+        key: lic.key || '',
+        isActivated: true,
+        validatedAt: Date.now(),
+        graceStartAt: this.getGraceStart(),
+        underGrace: true
+      })
+      this.notifyMainWindow('license-grace-active', {
+        remainingDays: Math.max(
+          0,
+          this.graceConfig.days -
+            (Date.now() - (this.getGraceStart() || Date.now())) / (1000 * 60 * 60 * 24)
+        )
+      })
+      return
+    }
     const errorType = this.getErrorType(reason)
     if (
       [
@@ -257,6 +404,25 @@ class LicenseManager {
     shouldQuit = false,
     customMessage: string | null = null
   ) {
+    if (this.isWithinGracePeriod()) {
+      Logger.log(`Grace period active; error deferred: ${error.message}`)
+      const lic = this.store.getLicense()
+      this.store.setLicense({
+        key: lic.key || '',
+        isActivated: true,
+        validatedAt: Date.now(),
+        graceStartAt: this.getGraceStart(),
+        underGrace: true
+      })
+      this.notifyMainWindow('license-grace-active', {
+        remainingDays: Math.max(
+          0,
+          this.graceConfig.days -
+            (Date.now() - (this.getGraceStart() || Date.now())) / (1000 * 60 * 60 * 24)
+        )
+      })
+      return
+    }
     const errorType = this.getErrorType(error.message)
     const errorConfig = ERROR_MESSAGES[errorType]
     this.closeMainWindow()

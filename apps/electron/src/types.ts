@@ -12,6 +12,8 @@ export interface TLicenseData {
   key: string | null
   isActivated: boolean
   validatedAt: number | null // Timestamp
+  graceStartAt: number | null // Timestamp
+  underGrace?: boolean
 }
 
 export interface TStoreSchema {

@@ -10,7 +10,7 @@ import { processManager } from '../lib/processManager'
 import { setupIpcHandlers } from '../ipc/index'
 import setupGlobalShortcuts from '../lib/setupGlobalShortcuts'
 import { Logger } from '../utils/logger'
-import { IS_SHOW_SPLASH_SCREEN, IS_DEV } from '@repo/constants'
+import { IS_SHOW_SPLASH_SCREEN, IS_DEV, ENABLE_LICENSE_GRACE_PERIOD, LICENSE_GRACE_PERIOD_DAYS } from '@repo/constants'
 
 import path from 'path'
 
@@ -72,6 +72,11 @@ app.whenReady().then(async () => {
 
     // Initialize LicenseManager
     licenseManager.init()
+    // Configure grace period from constants (supports runtime env overrides)
+    licenseManager.setGracePeriodConfig({
+      enabled: ENABLE_LICENSE_GRACE_PERIOD,
+      days: LICENSE_GRACE_PERIOD_DAYS
+    })
 
     // Start the app launch sequence
     Logger.log('Starting app launch sequence')

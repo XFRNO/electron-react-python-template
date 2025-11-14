@@ -24,7 +24,8 @@ export class StoreManager {
         license: {
           key: null,
           isActivated: false,
-          validatedAt: null
+          validatedAt: null,
+          graceStartAt: null
         }
       }
     })
