@@ -1,23 +1,21 @@
 import { BrowserWindow } from 'electron'
 import path from 'path'
 import { Logger } from '../utils/logger.js'
+import { getAssetPath } from '../utils/paths.js'
 
 import { IS_DEV } from '@repo/constants'
-import { getAssetPath } from '../utils/paths.js'
 let licenseWindow: BrowserWindow | null = null
 
 export const __filename = new URL(import.meta.url).pathname
 export const __dirname = path.dirname(__filename)
 
 export async function createLicenseWindow(): Promise<BrowserWindow> {
-  Logger.log('Creating license window')
-
   if (licenseWindow) {
     licenseWindow.close()
     licenseWindow = null
   }
 
-  const preloadPath = path.join(__dirname, '../preload/index.js')
+  const preloadPath = path.join(__dirname, '../preload/index.cjs')
 
   const windowOptions: Electron.BrowserWindowConstructorOptions = {
     width: 500,

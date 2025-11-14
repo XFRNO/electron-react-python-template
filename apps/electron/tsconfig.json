@@ -12,5 +12,6 @@
     "paths": {
       "@repo/constants": ["../../packages/constants/src"]
     }
-  }
+  },
+  "include": ["global.d.ts"]
 }

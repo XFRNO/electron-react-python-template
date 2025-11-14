@@ -25,10 +25,14 @@ export default defineConfig({
     plugins: [externalizeDepsPlugin()],
     build: {
       target: 'node18',
-
       rollupOptions: {
         input: path.resolve(__dirname, 'src/preload/index.ts') // ✅ preload entry
-      }
+      },
+      lib: {
+      entry: path.resolve(__dirname, 'src/preload/index.ts'),
+      formats: ['cjs'],       // <-- Force CommonJS output
+      fileName: 'index'       // outputs index.js instead of index.mjs
+    }
     },
     resolve: {
       alias: {

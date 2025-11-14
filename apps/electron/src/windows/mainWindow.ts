@@ -13,6 +13,9 @@ const __dirname = path.dirname(__filename)
 
 const ROOTPATH = path.resolve(__dirname, '../../../')
 
+  const preloadPath = path.join(__dirname, '../preload/index.cjs')
+
+
 export async function createMainWindow(onContentLoaded: () => void): Promise<BrowserWindow> {
   const windowOptions: Electron.BrowserWindowConstructorOptions = {
     title: 'Video Downloader',
@@ -22,7 +25,7 @@ export async function createMainWindow(onContentLoaded: () => void): Promise<Bro
     backgroundColor: '#1a1a1a',
     webPreferences: {
       contextIsolation: true,
-      preload: path.join(__dirname, '../preload/index.js'),
+      preload: preloadPath,
       webSecurity: true,
       nodeIntegration: false,
       sandbox: false,
