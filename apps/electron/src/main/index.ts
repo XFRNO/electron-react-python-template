@@ -1,7 +1,7 @@
 import dotenv from 'dotenv'
 import { app, globalShortcut, BrowserWindow, dialog } from 'electron'
 import { createSplashWindow, showSplashError } from '../windows/splashWindow'
-import { createMainWindow, loadMainWindowContent } from '../windows/mainWindow'
+import { createMainWindow, loadMainWindowContent, showMainWindow } from '../windows/mainWindow'
 import { getMainWindow } from '../windows/mainWindow'
 import { frontendManager } from '../lib/frontendManager'
 import { backendManager } from '../lib/backendManager'
@@ -77,7 +77,7 @@ app.whenReady().then(async () => {
 
     // Initialize LicenseManager
     licenseManager.init()
-    // Configure grace period from constants (supports runtime env overrides)
+
     licenseManager.setGracePeriodConfig({
       enabled: ENABLE_LICENSE_GRACE_PERIOD,
       days: LICENSE_GRACE_PERIOD_DAYS

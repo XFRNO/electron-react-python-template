@@ -1,5 +1,4 @@
-import waitOn from "wait-on";
-import { Logger } from "./logger.js";
+import waitOn from 'wait-on'
 
 /**
  * Waits for a given resource (URL, file, or socket) to become available.
@@ -8,17 +7,14 @@ import { Logger } from "./logger.js";
  */
 export async function waitForResource({
   resource,
-  timeout = 30000,
+  timeout = 30000
 }: {
-  resource: string;
-  timeout?: number;
+  resource: string
+  timeout?: number
 }): Promise<void> {
   try {
-    Logger.info(`⏳ Waiting for resource: ${resource}`);
-    await waitOn({ resources: [resource], timeout });
-    Logger.info(`✅ Resource available: ${resource}`);
+    await waitOn({ resources: [resource], timeout })
   } catch (err) {
-    Logger.error(`❌ Resource not available: ${resource}`, err);
-    throw err;
+    throw err
   }
 }

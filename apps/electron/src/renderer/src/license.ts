@@ -1,12 +1,8 @@
-console.log('License HTML loaded')
-
 // Check if electron is available
 if (typeof window.electron === 'undefined') {
   console.error('electron is not available!')
   displayLicenseError('Error', 'Application not loaded properly. Please restart the app.')
 } else {
-  console.log('electron is available')
-
   // Listen for error messages from the main process
   window.electron.onLicenseError((errorTitle: string, errorMessage: string) => {
     displayLicenseError(errorTitle, errorMessage)
@@ -18,7 +14,6 @@ if (typeof window.electron === 'undefined') {
   try {
     if (window.electron && typeof window.electron.getAppInfo === 'function') {
       const info = await window.electron.getAppInfo()
-      console.log(info)
 
       if (info?.name) {
         document.title = `${info.name} - License Verification`
@@ -62,7 +57,6 @@ function displayLicenseError(title: string, message: string): void {
 }
 
 async function verifyLicense(): Promise<void> {
-  console.log('verifyLicense function called')
   const licenseKeyInput = document.getElementById('licenseKey') as HTMLInputElement
   const verifyBtn = document.getElementById('verifyBtn') as HTMLButtonElement
 
@@ -110,7 +104,6 @@ async function verifyLicense(): Promise<void> {
 }
 
 function openPurchase(): void {
-  console.log('openPurchase function called')
   // Check if electron and openExternal are available
   if (
     typeof window.electron !== 'undefined' &&
@@ -127,14 +120,14 @@ function openPurchase(): void {
 
 // Allow Enter key to submit and add event listeners for buttons
 document.addEventListener('DOMContentLoaded', () => {
-  const verifyBtn = document.getElementById('verifyBtn') as HTMLButtonElement;
+  const verifyBtn = document.getElementById('verifyBtn') as HTMLButtonElement
   if (verifyBtn) {
-    verifyBtn.addEventListener('click', verifyLicense);
+    verifyBtn.addEventListener('click', verifyLicense)
   }
 
-  const purchaseLink = document.querySelector('p > a[href="#"]') as HTMLAnchorElement;
+  const purchaseLink = document.querySelector('p > a[href="#"]') as HTMLAnchorElement
   if (purchaseLink) {
-    purchaseLink.addEventListener('click', openPurchase);
+    purchaseLink.addEventListener('click', openPurchase)
   }
 
   document.addEventListener('keypress', function (e: KeyboardEvent) {
@@ -142,6 +135,4 @@ document.addEventListener('DOMContentLoaded', () => {
       verifyLicense()
     }
   })
-});
-
-console.log('License HTML script loaded')
+})

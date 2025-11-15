@@ -9,9 +9,6 @@ export const Route = createFileRoute("/main")({
 function MainPage() {
   const [message, setMessage] = useState("Hello from the main page!");
 
-  console.log(IS_DEV);
-  console.log(APP_NAME);
-
   return (
     <div className="flex flex-col justify-center items-center min-h-screen bg-background text-foreground">
       <h1 className="mb-4 text-3xl font-bold">Main Page</h1>

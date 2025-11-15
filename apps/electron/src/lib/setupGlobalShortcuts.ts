@@ -1,28 +1,24 @@
-import { Logger } from "../utils/logger.js";
+import { app, globalShortcut } from 'electron'
 
-import { app, globalShortcut } from "electron";
-
-const isDev = !app.isPackaged;
+const isDev = !app.isPackaged
 
 export default function setupGlobalShortcuts() {
   // Disable reload and dev tools shortcuts
   if (!isDev) {
-    globalShortcut.register("CommandOrControl+R", () => {
+    globalShortcut.register('CommandOrControl+R', () => {
       // Prevent reload
-    });
+    })
   }
 
-  globalShortcut.register("CommandOrControl+Shift+R", () => {
+  globalShortcut.register('CommandOrControl+Shift+R', () => {
     // Prevent hard reload
-  });
+  })
 
-  globalShortcut.register("F5", () => {
+  globalShortcut.register('F5', () => {
     // Prevent refresh
-  });
+  })
 
-  globalShortcut.register("CommandOrControl+Shift+I", () => {
+  globalShortcut.register('CommandOrControl+Shift+I', () => {
     // Prevent DevTools
-  });
-
-  Logger.log("Global shortcuts registered");
+  })
 }

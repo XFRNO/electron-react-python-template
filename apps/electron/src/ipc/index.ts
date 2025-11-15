@@ -3,9 +3,6 @@ import { setupLicenseHandlers } from './license.js'
 import { setupApiHandlers } from './api.js'
 import { setupSystemHandlers } from './system.js'
 import { setupSettingsHandlers } from './settings.js'
-import { Logger } from '../utils/logger.js'
-
-Logger.info('Setting up IPC handlers')
 
 /**
  * Sets up all IPC handlers for the application

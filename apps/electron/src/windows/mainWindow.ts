@@ -1,8 +1,8 @@
 import { BrowserWindow } from 'electron'
 import path from 'path'
-import { Logger } from '../utils/logger.js'
 
 import { APP_NAME, IS_DEV } from '@repo/constants'
+import { Logger } from '../utils/logger'
 
 let mainWindow: BrowserWindow | null = null
 let isRefreshing = false
@@ -11,7 +11,7 @@ let contentLoadTimeout: NodeJS.Timeout | null = null
 const __filename = new URL(import.meta.url).pathname
 const __dirname = path.dirname(__filename)
 
-const ROOTPATH = path.resolve(__dirname, '../../../')
+const ROOTPATH = path.resolve(__dirname, '../../../../')
 
 const preloadPath = path.join(__dirname, '../preload/index.mjs')
 

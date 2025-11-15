@@ -1,7 +1,4 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import { Logger } from '../utils/logger'
-
-Logger.log('🔥 PRELOAD LOADED 🔥')
 
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
