@@ -1,16 +1,47 @@
 import https from 'https'
 import { storeManager } from '../utils/storeManager.js'
 import { Logger } from '../utils/logger.js'
-import { GUMROAD_PRODUCT_ID, API_TIMEOUT_MS } from '@repo/constants'
+import {
+  GUMROAD_PRODUCT_ID,
+  API_TIMEOUT_MS,
+  ENABLE_LICENSE_GRACE_PERIOD,
+  LICENSE_GRACE_PERIOD_DAYS
+} from '@repo/constants'
 
 class LicenseManager {
   private store = storeManager
 
-  init(): void {}
+  init(): void {
+    if (ENABLE_LICENSE_GRACE_PERIOD) {
+      const lic = this.store.getLicense()
+      if (!lic.validatedAt) {
+        this.store.setLicense({ ...lic, validatedAt: Date.now() })
+        Logger.info('First run, starting grace period.')
+      }
+    }
+  }
 
   isLicensed(): boolean {
     const lic = this.store.getLicense()
-    return !!lic.isActivated && !!lic.key
+    if (lic.isActivated && lic.key) {
+      return true
+    }
+
+    if (ENABLE_LICENSE_GRACE_PERIOD) {
+      if (lic.validatedAt) {
+        const now = Date.now()
+        const gracePeriodEnds = lic.validatedAt + LICENSE_GRACE_PERIOD_DAYS
+        if (now < gracePeriodEnds) {
+          const remainingTime = gracePeriodEnds - now
+          const remainingDays = Math.ceil(remainingTime / (1000 * 60 * 60 * 24))
+          Logger.info(`In grace period. ${remainingDays} days remaining.`)
+          return true
+        } else {
+          Logger.warn('Grace period has expired.')
+        }
+      }
+    }
+    return false
   }
 
   async verifyLicense(licenseKey: string): Promise<{ success: boolean; error?: string; details?: any }> {
@@ -26,7 +57,8 @@ class LicenseManager {
 
       const isValid = await this.verifyWithGumroad(licenseKey, true)
       if (isValid) {
-        this.store.setLicense({ key: licenseKey, isActivated: true, validatedAt: Date.now() })
+        const lic = this.store.getLicense()
+        this.store.setLicense({ ...lic, key: licenseKey, isActivated: true, validatedAt: Date.now() })
       }
       return { success: isValid }
     } catch (error) {

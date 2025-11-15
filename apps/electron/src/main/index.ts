@@ -31,9 +31,13 @@ async function appStartup(): Promise<void> {
     const lic = await createLicenseWindow()
     const verified = await new Promise<boolean>((resolve) => {
       ipcMain.once('license:verified', () => resolve(true))
+      lic.on('closed', () => resolve(false))
     })
     if (lic && !lic.isDestroyed()) lic.close()
-    if (!verified) return
+    if (!verified) {
+      app.quit()
+      return
+    }
   }
 
   const urlOrPath = await frontendManager.launch()

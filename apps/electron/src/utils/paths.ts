@@ -22,7 +22,8 @@ export function getPreloadPath(): string {
   const baseDir = __dirname
   const candidates = [
     path.join(baseDir, '../preload/index.js'),
-    path.join(baseDir, '../preload/index.mjs')
+    path.join(baseDir, '../preload/index.mjs'),
+    path.join(baseDir, '../preload/index.cjs')
   ]
   for (const p of candidates) {
     if (fs.existsSync(p)) return p

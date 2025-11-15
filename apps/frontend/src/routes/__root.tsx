@@ -2,14 +2,44 @@ import { createRootRoute, Link, Outlet } from "@tanstack/react-router";
 import { APP_NAME, APP_VERSION } from "@repo/constants";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/shared/theme-provider";
+import { SettingsModal } from "@/components/layout/settings-modal";
+import { useEffect, useState } from "react";
+import { Settings } from "lucide-react";
 
 export const Route = createRootRoute({
   component: RootComponent,
 });
 
 function RootComponent() {
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  // Listen for the custom event to open settings modal
+  useEffect(() => {
+    const handleOpenSettings = () => setIsSettingsOpen(true);
+    window.addEventListener("openSettingsModal", handleOpenSettings);
+    return () => {
+      window.removeEventListener("openSettingsModal", handleOpenSettings);
+    };
+  }, []);
+
+  // Function to open settings modal
+  const openSettings = () => {
+    // Dispatch a custom event to open the settings modal
+    window.dispatchEvent(new CustomEvent("openSettingsModal"));
+  };
+
   return (
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+      <SettingsModal open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
+
+      <button
+        onClick={openSettings}
+        className="p-2 rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground"
+        aria-label="Settings"
+      >
+        <Settings className="w-5 h-5" />
+      </button>
+
       <div className="min-h-screen bg-background text-foreground">
         <header className="border-b">
           <div className="container flex justify-between items-center px-4 h-16">
