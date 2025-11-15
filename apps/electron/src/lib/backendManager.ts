@@ -9,7 +9,7 @@ import { IS_DEV } from '@repo/constants'
 
 const __filename = new URL(import.meta.url).pathname
 const __dirname = path.dirname(__filename)
-const ROOTPATH = path.resolve(__dirname, '../../../')
+const ROOTPATH = path.resolve(__dirname, '../../../../')
 
 class BackendManager {
   private port: number | null = null

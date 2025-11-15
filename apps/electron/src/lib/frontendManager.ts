@@ -6,11 +6,10 @@ import { processManager } from './processManager.js'
 import { getAvailablePort } from '../utils/portUtils.js'
 import { IS_DEV } from '@repo/constants'
 
-
 const __filename = new URL(import.meta.url).pathname
 const __dirname = path.dirname(__filename)
 
-const ROOTPATH = path.resolve(__dirname, '../../../')
+const ROOTPATH = path.resolve(__dirname, '../../../../')
 
 class FrontendManager {
   private port: number | null = null
@@ -37,7 +36,7 @@ class FrontendManager {
 
       // Spawn Vite dev server
       Logger.log(`Starting Vite dev server on port ${frontendPort}...`)
-      processManager.spawn(processName, 'pnpm', ['run', 'dev'], {
+      processManager.spawn(processName, 'npm', ['run', 'dev'], {
         cwd: frontendDir,
         env: { ...process.env, PORT: frontendPort.toString() }
       })
