@@ -56,6 +56,30 @@ function displayLicenseError(title: string, message: string): void {
   if (paragraphElement) paragraphElement.style.display = 'block'
 }
 
+// Function to display license success
+function displayLicenseSuccess(title: string, message: string): void {
+  const successContainer = document.getElementById('successContainer')
+  const successTitle = document.getElementById('successTitle')
+  const successMessage = document.getElementById('successMessage')
+  if (!successContainer || !successTitle || !successMessage) {
+    console.error('Success container, title, or message element not found')
+    return
+  }
+
+  // Set success title and message
+  successTitle.textContent = title
+  successMessage.textContent = message
+
+  // Ensure all elements remain visible when showing success
+  const licenseKeyInput = document.querySelector('input[type="text"]') as HTMLInputElement
+  const verifyButton = document.querySelector('#verifyBtn') as HTMLButtonElement
+  const paragraphElement = document.querySelector('p')
+
+  if (licenseKeyInput) licenseKeyInput.style.display = 'block'
+  if (verifyButton) verifyButton.style.display = 'block'
+  if (paragraphElement) paragraphElement.style.display = 'block'
+}
+
 async function verifyLicense(): Promise<void> {
   const licenseKeyInput = document.getElementById('licenseKey') as HTMLInputElement
   const verifyBtn = document.getElementById('verifyBtn') as HTMLButtonElement
@@ -80,7 +104,7 @@ async function verifyLicense(): Promise<void> {
     const result = await window.electron.verifyLicense(licenseKey)
     if (result.success) {
       // Show success message at the top
-      displayLicenseError('Success', 'License verified! Starting application...')
+      displayLicenseSuccess('Success', 'License verified! Starting application...')
       setTimeout(() => {
         // License window will be closed by main process
       }, 1000)

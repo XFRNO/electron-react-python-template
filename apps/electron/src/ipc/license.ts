@@ -3,28 +3,18 @@ import { Logger } from '../utils/logger.js'
 import { licenseManager } from '../lib/licenseManager.js'
 import { storeManager } from '../utils/storeManager.js'
 
-/**
- * Sets up license-related IPC handlers
- * @param createWindow - Function to create main window
- */
-export function setupLicenseHandlers(createWindow: () => Promise<any>): void {
-  // License verification
+export function setupLicenseHandlers(): void {
   ipcMain.handle('verify-license', async (_event, licenseKey: string) => {
     try {
       const result = await licenseManager.verifyLicense(licenseKey)
-
       if (result.success) {
-        // Close license window and open main app
-        setImmediate(() => licenseManager.onAppLaunch(createWindow))
+        ipcMain.emit('license:verified')
       } else if (result.error) {
-        // Check if it's a deactivated or refunded license
         if (result.error.includes('deactivated') || result.error.includes('refunded')) {
-          // Clear the invalid license
           await licenseManager.clearLicense()
           storeManager.clearLicense()
         }
       }
-
       return result
     } catch (error) {
       Logger.error('Error in verify-license handler:', error)
@@ -32,7 +22,6 @@ export function setupLicenseHandlers(createWindow: () => Promise<any>): void {
     }
   })
 
-  // Clear license
   ipcMain.handle('clear-license', async () => {
     try {
       await licenseManager.clearLicense()

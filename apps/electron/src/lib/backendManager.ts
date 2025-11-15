@@ -3,7 +3,7 @@ import fs from 'fs'
 import http from 'http'
 import { Logger } from '../utils/logger.js'
 import { processManager } from './processManager.js'
-import { getAvailablePort } from '../utils/portUtils.js' // Import the utility function
+import { getAvailablePort } from '../utils/portUtils.js'
 
 import { IS_DEV } from '@repo/constants'
 
@@ -21,7 +21,7 @@ class BackendManager {
   /**
    * Launches backend process
    */
-  public async start(frontendUrl: string, frontendPort: number): Promise<void> {
+  public async start(frontendUrlOrPath: string): Promise<void> {
     Logger.time('Backend Launch')
     Logger.log(`🚀 Starting backend (${IS_DEV ? 'development' : 'production'})`)
 
@@ -39,12 +39,18 @@ class BackendManager {
       throw new Error(msg)
     }
 
+    let frontendPort: string | null = null
+    try {
+      const u = new URL(frontendUrlOrPath)
+      frontendPort = u.port || null
+    } catch {}
+
     const env = {
       ...process.env,
       PYTHONUNBUFFERED: '1',
       BACKEND_PORT: String(this.port),
-      FRONTEND_PORT: String(frontendPort),
-      FRONTEND_URL: frontendUrl
+      FRONTEND_PORT: frontendPort || '',
+      FRONTEND_URL: frontendUrlOrPath
     }
 
     Logger.log(`Backend starting on port ${this.port}`)
@@ -61,8 +67,8 @@ class BackendManager {
         ['-m', 'uvicorn', 'src.main:app', '--host', '127.0.0.1', '--port', String(this.port)],
         {
           cwd: backendDir,
-          env
-        }
+        env
+      }
       )
       this.processId = processName // Assign the name to this.processId
     }
