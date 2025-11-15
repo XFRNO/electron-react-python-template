@@ -11,6 +11,7 @@ import { frontendManager } from '../lib/frontendManager.js'
 import { backendManager } from '../lib/backendManager.js'
 import { licenseManager } from '../lib/licenseManager.js'
 import { processManager } from '../lib/processManager.js'
+import { storeManager } from '../utils/storeManager.js'
 
 const __filename = new URL(import.meta.url).pathname
 const __dirname = path.dirname(__filename)
@@ -23,17 +24,29 @@ async function appStartup(): Promise<void> {
   const splash = await createSplashWindow()
   splash.show()
 
+  const license = storeManager.getLicense()
+  Logger.log('License:', license)
+
   setupIpcHandlers()
 
   licenseManager.init()
 
-  if (!licenseManager.isLicensed()) {
+  const isLicensed = await licenseManager.isLicensed()
+
+  if (!isLicensed) {
+    Logger.log('License not found, opening license window')
     const lic = await createLicenseWindow()
+    lic.show()
+
+    if (splash && !splash.isDestroyed()) splash.close()
+
     const verified = await new Promise<boolean>((resolve) => {
       ipcMain.once('license:verified', () => resolve(true))
       lic.on('closed', () => resolve(false))
     })
+
     if (lic && !lic.isDestroyed()) lic.close()
+
     if (!verified) {
       app.quit()
       return

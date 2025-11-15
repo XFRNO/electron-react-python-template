@@ -1,50 +1,59 @@
 import https from 'https'
 import { storeManager } from '../utils/storeManager.js'
 import { Logger } from '../utils/logger.js'
-import {
-  GUMROAD_PRODUCT_ID,
-  API_TIMEOUT_MS,
-  ENABLE_LICENSE_GRACE_PERIOD,
-  LICENSE_GRACE_PERIOD_DAYS
-} from '@repo/constants'
+import { GUMROAD_PRODUCT_ID, API_TIMEOUT_MS, LICENSE_GRACE_PERIOD_DAYS } from '@repo/constants'
 
 class LicenseManager {
   private store = storeManager
 
   init(): void {
-    if (ENABLE_LICENSE_GRACE_PERIOD) {
-      const lic = this.store.getLicense()
-      if (!lic.validatedAt) {
-        this.store.setLicense({ ...lic, validatedAt: Date.now() })
-        Logger.info('First run, starting grace period.')
-      }
-    }
+    // Logic moved to isLicensed to prevent unconditional grace period.
   }
 
-  isLicensed(): boolean {
+  async isLicensed(): Promise<boolean> {
     const lic = this.store.getLicense()
-    if (lic.isActivated && lic.key) {
-      return true
+
+    if (!lic.key) {
+      Logger.info('No license key found.')
+      return false
     }
 
-    if (ENABLE_LICENSE_GRACE_PERIOD) {
-      if (lic.validatedAt) {
-        const now = Date.now()
-        const gracePeriodEnds = lic.validatedAt + LICENSE_GRACE_PERIOD_DAYS
-        if (now < gracePeriodEnds) {
-          const remainingTime = gracePeriodEnds - now
-          const remainingDays = Math.ceil(remainingTime / (1000 * 60 * 60 * 24))
-          Logger.info(`In grace period. ${remainingDays} days remaining.`)
-          return true
-        } else {
-          Logger.warn('Grace period has expired.')
-        }
+    // If license is active and within the grace period, no need to check.
+    if (lic.isActivated && lic.validatedAt) {
+      const now = Date.now()
+      const gracePeriodEnds = lic.validatedAt + LICENSE_GRACE_PERIOD_DAYS
+      if (now < gracePeriodEnds) {
+        const remainingTime = gracePeriodEnds - now
+        const remainingDays = Math.ceil(remainingTime / (1000 * 60 * 60 * 24))
+        Logger.info(`License valid. Re-validation in ${remainingDays} days.`)
+        return true
       }
     }
-    return false
+
+    // Grace period expired or license not activated, so we need to re-validate.
+    Logger.info('License requires validation. Contacting verification server...')
+    try {
+      const response = await this.makeGumroadRequest(lic.key, false) // Check without incrementing uses
+      if (response.success === true) {
+        this.validatePurchase(response.purchase) // Throws on refunded, chargebacked, etc.
+        this.store.setLicense({ ...lic, isActivated: true, validatedAt: Date.now() })
+        Logger.info('License successfully re-validated.')
+        return true
+      } else {
+        throw new Error(response.message || 'License verification failed')
+      }
+    } catch (error) {
+      const err = error as Error
+      Logger.error(`License validation request failed: ${err.message}`)
+
+      this.store.setLicense({ ...lic, isActivated: false })
+      return false
+    }
   }
 
-  async verifyLicense(licenseKey: string): Promise<{ success: boolean; error?: string; details?: any }> {
+  async verifyLicense(
+    licenseKey: string
+  ): Promise<{ success: boolean; error?: string; details?: any }> {
     try {
       const checkResponse = await this.makeGumroadRequest(licenseKey, false)
       if (checkResponse.success !== true) {
@@ -58,7 +67,12 @@ class LicenseManager {
       const isValid = await this.verifyWithGumroad(licenseKey, true)
       if (isValid) {
         const lic = this.store.getLicense()
-        this.store.setLicense({ ...lic, key: licenseKey, isActivated: true, validatedAt: Date.now() })
+        this.store.setLicense({
+          ...lic,
+          key: licenseKey,
+          isActivated: true,
+          validatedAt: Date.now()
+        })
       }
       return { success: isValid }
     } catch (error) {
@@ -82,7 +96,8 @@ class LicenseManager {
     if (purchase.refunded) throw new Error('License has been refunded.')
     if (purchase.chargebacked) throw new Error('License has been chargebacked.')
     if (purchase.subscription_ended_at) throw new Error('License subscription has ended.')
-    if (purchase.subscription_cancelled_at) throw new Error('License subscription has been cancelled.')
+    if (purchase.subscription_cancelled_at)
+      throw new Error('License subscription has been cancelled.')
     if (purchase.subscription_failed_at) throw new Error('License subscription payment failed.')
   }
 
@@ -125,7 +140,10 @@ class LicenseManager {
     })
   }
 
-  private async verifyWithGumroad(licenseKey: string, incrementUsesCount = false): Promise<boolean> {
+  private async verifyWithGumroad(
+    licenseKey: string,
+    incrementUsesCount = false
+  ): Promise<boolean> {
     if (!GUMROAD_PRODUCT_ID || GUMROAD_PRODUCT_ID.length < 10)
       throw new Error('Invalid product ID. Please check your Gumroad configuration.')
     if (!licenseKey) throw new Error('No license key provided for verification.')

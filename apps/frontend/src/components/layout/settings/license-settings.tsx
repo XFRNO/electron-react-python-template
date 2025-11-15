@@ -10,12 +10,15 @@ export function LicenseSettings() {
       setIsSaving(true);
       const result = await window.electron.clearLicense();
 
+      console.log(result);
+
       if (result.success) {
         // Restart the app to trigger license verification
         setTimeout(async () => {
           await window.electron.restartApp();
         }, 2000);
       } else {
+        console.log("something went wrong");
       }
     } catch (error) {
       console.error("Failed to clear license:", error);
